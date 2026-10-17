@@ -188,8 +188,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [KeyboardButton("📝 Model Exam"), KeyboardButton("🏛 Remedial National Exam 🔒")],
         [KeyboardButton("🎯 Exam Trainer Quiz"), KeyboardButton("📚 Tutorial PDF+Video 🔒")],
-        [KeyboardButton("🏆 Leaderboard"), KeyboardButton("🎓 Go to Tutorial Class 🔒")],
-        [KeyboardButton("👨‍💻 Contact Admin")]
+        [KeyboardButton("💎 VIP / ፕሪሚየም ለመሆን"), KeyboardButton("🏆 Leaderboard")],
+        [KeyboardButton("🎓 Go to Tutorial Class 🔒"), KeyboardButton("👨‍💻 Contact Admin")]
     ]
     
     if user.id == ADMIN_ID:
@@ -222,29 +222,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     db_add_user(user.id, user.full_name, user.username)
     
-    # 1. ፎቶ (ስክሪንሾት) ሲላክ የሚከናወን
-    if update.message.photo:
-        photo_file = update.message.photo[-1].file_id
-        
-        approval_kb = [
-            [InlineKeyboardButton("✅ Approve (አጽድቅ)", callback_data=f"approve|{user.id}"),
-             InlineKeyboardButton("❌ Dismiss (ውድቅ አድርግ)", callback_data=f"dismiss|{user.id}")]
-        ]
-        await context.bot.send_photo(
-            chat_id=ADMIN_ID,
-            photo=photo_file,
-            caption=f"🚨 **አዲስ የክፍያ ስክሪንሾት መጣ!**\n\n👤 ስም: {user.full_name}\n🆔 ID: `{user.id}`\nዩዘርናም: @{user.username or 'None'}",
-            reply_markup=InlineKeyboardMarkup(approval_kb),
-            parse_mode="Markdown"
-        )
-        await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል። አድሚኑ ሲያረጋግጠው ፕሪሚየም አካውንትዎ በቅርቡ ይከፈታል!", protect_content=True)
-        return
-
-    text = update.message.text
-    if not text:
-        return
-
-    # 2. አድሚን ብሮድካስት ሲልክ
+    # አድሚን ብሮድካስት እንዲልክ መልዕክት ሲጠብቅ
     if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
         target_group = user_quiz_sessions.pop("broadcasting_target", "all")
         user_quiz_sessions["broadcasting_mode"].remove(user.id)
@@ -262,21 +240,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"✅ ብሮድካስቱ በተሳካ ሁኔታ ለ **{success_count}** ተጠቃሚዎች ተልኳል!")
         return
 
-    # 3. ተጠቃሚው ስሙን እና ስትሪሙን ሲጽፍ
-    if user.id in user_quiz_sessions.get("awaiting_name_stream", set()):
-        user_quiz_sessions["awaiting_name_stream"].remove(user.id)
-        user_quiz_sessions.setdefault("awaiting_payment_approval", set()).add(user.id)
+    # ተጠቃሚው ስክሪንሾት (ፎቶ) ከላከ - በቀጥታ ወደ አድሚን እንዲደርስ ማድረግ
+    if update.message.photo:
+        photo_file = update.message.photo[-1].file_id
         
-        bank_text = (
-            f"እሺ **{text}**\n\n"
-            "መልካም! ፕሪሚየም ለመሆን ተቃርበዋል 🎉\n\n"
-            "በሚከተሉት የባንክ አካውንት አማራጮች **300 ብር** ብቻ በመክፈል ሙሉ ዓመቱን ከኛ ጋር ፕሪሚየም ሆነው መማር ይችላሉ፦\n\n"
-            "🏦 **CBE:** `1000667301673`\n"
-            "📱 **TELEBIRR:** `0929698365`\n"
-            "📱 **CBE BIRR:** `0929698365`\n\n"
-            "ከነዚህ ውስጥ በተመቸዎት አማራጭ 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶ እዚህ ጋ ይላኩ 👇"
+        approval_kb = [
+            [InlineKeyboardButton("✅ Approve (አጽድቅ)", callback_data=f"approve|{user.id}"),
+             InlineKeyboardButton("❌ Dismiss (ውድቅ አድርግ)", callback_data=f"dismiss|{user.id}")]
+        ]
+        await context.bot.send_photo(
+            chat_id=ADMIN_ID,
+            photo=photo_file,
+            caption=f"🚨 **አዲስ የክፍያ ስክሪንሾት መጣ!**\n\n👤 ስም: {user.full_name}\n🆔 ID: `{user.id}`\nዩዘርናም: @{user.username or 'None'}",
+            reply_markup=InlineKeyboardMarkup(approval_kb),
+            parse_mode="Markdown"
         )
-        await update.message.reply_text(bank_text, parse_mode="Markdown", protect_content=True)
+        await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል! አድሚኑ ክፍያዎን አረጋግጦ ፕሪሚየም አካውንትዎን በቅርቡ ይከፍታል።", protect_content=True)
+        return
+
+    text = update.message.text
+    if not text:
         return
 
     if text == "📝 Model Exam":
@@ -298,17 +281,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]
             await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
         else:
-            keyboard = [[InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን premium ተጠቃሚ አደሉም።\npremium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\npremium መሆን ይፈልጋሉ?"
+            keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
+            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ፕሪሚየም ሲሆኑ ሁሉንም ጥያቄዎች እና ቱቶሪያሎች ማግኘት ይችላሉ።"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text in ["📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
         if db_is_premium(user.id):
             await update.message.reply_text("🎓📚 **የፕሪሚየም ትምህርት ማዕከል ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
         else:
-            keyboard = [[InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን premium ተጠቃሚ አደሉም።\npremium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\npremium መሆን ይፈልጋሉ?"
+            keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
+            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ፕሪሚየም በመሆን Private Tutorial Class ይክፈቱ!"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
+
+    elif text == "💎 VIP / ፕሪሚየም ለመሆን":
+        vip_text = (
+            "💎 **የ VIP / ፕሪሚየም አባልነት መረጃ** 💎\n\n"
+            "ሙሉ ዓመቱን ከኛ ጋር ሆኖ ለመማር እና ሁሉንም ጥያቄዎች/ቪዲዮዎች ለመክፈት **300 ብር** ብቻ በመክፈል ፕሪሚየም ይሁኑ!\n\n"
+            "🏦 **CBE:** `1000667301673`\n"
+            "📱 **TELEBIRR:** `0929698365`\n"
+            "📱 **CBE BIRR:** `0929698365`\n\n"
+            "💵 ከላይ ባሉት አማራጮች 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ! ስላኩት በሰከንዶች ውስጥ አድሚኑ ያረጋግጥልዎታል።"
+        )
+        await update.message.reply_text(vip_text, parse_mode="Markdown", protect_content=True)
 
     elif text == "🎯 Exam Trainer Quiz":
         keyboard = [
@@ -376,13 +370,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("📢 ለ **Free** ተጠቃሚዎች መላክ የሚፈልጉትን መልዕክት (ወይም ፎቶ) አሁን ይላኩሱልኝ:")
         return
 
-    elif data == "want_premium":
-        user_quiz_sessions.setdefault("awaiting_name_stream", set()).add(user.id)
-        await query.message.reply_text(
-            "መልካም! ሙሉ ስምዎን እና (Natural ወይስ Social) stream መሆንዎን ይንገሩኝ።\n"
-            "(እባክዎ መልዕክትዎትን እዚህ ይጻፉልን 👇)",
-            protect_content=True
+    elif data == "vip_info":
+        vip_text = (
+            "💎 **የ VIP / ፕሪሚየም አባልነት መረጃ** 💎\n\n"
+            "ሙሉ ዓመቱን ከኛ ጋር ሆኖ ለመማር እና ሁሉንም ጥያቄዎች/ቪዲዮዎች ለመክፈት **300 ብር** ብቻ በመክፈል ፕሪሚየም ይሁኑ!\n\n"
+            "🏦 **CBE:** `1000667301673`\n"
+            "📱 **TELEBIRR:** `0929698365`\n"
+            "📱 **CBE BIRR:** `0929698365`\n\n"
+            "💵 ከላይ ባሉት አማራጮች 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ!"
         )
+        await query.message.reply_text(vip_text, parse_mode="Markdown")
         return
 
     elif data.startswith("approve|") or data.startswith("dismiss|"):
@@ -393,9 +390,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if action == "approve":
             db_set_premium(target_id, 1)
-            if target_id in user_quiz_sessions.get("awaiting_payment_approval", set()):
-                user_quiz_sessions["awaiting_payment_approval"].remove(target_id)
-            
             await context.bot.send_message(
                 chat_id=target_id,
                 text="🎉 **እንኳን ደስ አለዎት!** ክፍያዎ በአድሚን ጸድቋል። አሁን ሁሉም ፕሪሚየም አዝራሮች እና Private Tutorial Class ተከፍተውልዎታል!",
@@ -406,9 +400,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception:
                 pass
         else:
-            if target_id in user_quiz_sessions.get("awaiting_payment_approval", set()):
-                user_quiz_sessions["awaiting_payment_approval"].remove(target_id)
-            
             await context.bot.send_message(
                 chat_id=target_id,
                 text="❌ ይቅርታ፣ የክፍያ ስክሪንሾትዎ ውድቅ ተደርጓል። እባክዎ አድሚኑን ያነጋግሩ @rmedial_matrix_support",
