@@ -1497,8 +1497,7 @@
         {"question": "49. What is the main source of air pollution in Addis Ababa?", "options": ["Vehicles", "Factories", "Burning waste", "All of the above"], "correct_option_id": 3, "explanation": "All of the above."},
         {"question": "50. What is the main source of water pollution in Ethiopia?", "options": ["Industrial waste", "Sewage", "Agricultural runoff", "All of the above"], "correct_option_id": 3, "explanation": "All of the above."}
       ]
-    }
-  },
+    },
   "remedial_exams": {
     "2017": {
       "Biology": [
