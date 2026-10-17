@@ -107,7 +107,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_bot_stats["total_users"].add(user.id)
     
-    # 1. ተጠቃሚው ስሙን እና ስትሪሙን ከጻፈ በኋላ የሚቀበለው ክፍል
     if user.id in user_quiz_sessions.get("awaiting_name_stream", set()):
         user_quiz_sessions["awaiting_name_stream"].remove(user.id)
         user_quiz_sessions.setdefault("awaiting_payment_approval", set()).add(user.id)
@@ -118,13 +117,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🏦 **CBE:** `1000667301673`\n"
             "📱 **TELEBIRR:** `0929698365`\n"
             "📱 **CBE BIRR:** `0929698365`\n\n"
-            "ከነዚህ ውስጥ በተመቸዎት አማራጭ 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶ እዚህ ጋ ይላኩ 👇\n\n"
-            "ስክሪንሾቱን ሲልኩልኝ አድሚኑ አረጋግጦ ፕሪሚየም ያደርግዎታል።"
+            "ከነዚህ ውስጥ በተመቸዎት አማራጭ 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶ እዚህ ጋ ይላኩ 👇"
         )
         await update.message.reply_text(bank_text, parse_mode="Markdown")
         return
 
-    # 2. ተጠቃሚው የክፍያ ስክሪንሾት (ፎቶ) ከላከ
     if update.message.photo:
         if user.id in user_quiz_sessions.get("awaiting_payment_approval", set()):
             photo_file = update.message.photo[-1].file_id
@@ -153,14 +150,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         await update.message.reply_text("📌 **Model Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
-    elif text in ["🏛 Remedial National Exam 🔒", "📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
+    elif text == "🏛 Remedial National Exam 🔒":
+        if user.id in premium_users:
+            keyboard = [
+                [InlineKeyboardButton("📅 2015", callback_data="rem_year_2015"),
+                 InlineKeyboardButton("📅 2016", callback_data="rem_year_2016")],
+                [InlineKeyboardButton("📅 2017", callback_data="rem_year_2017"),
+                 InlineKeyboardButton("📅 2018", callback_data="rem_year_2018")],
+                [InlineKeyboardButton("❌ ዝጋ", callback_data="close_menu")]
+            ]
+            await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        else:
+            keyboard = [
+                [InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]
+            ]
+            msg = (
+                f"ሰላም {user.full_name}\n"
+                "እስካሁን premium ተጠቃሚ አደሉም።\n"
+                "premium ሲሆኑ ሁሉም buttun ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\n"
+                "premium መሆን ይፈልጋሉ?"
+            )
+            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
+
+    elif text in ["📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
         if user.id in premium_users:
             if "Tutorial Class" in text:
                 await update.message.reply_text("🎓 **Private Tutorial Class ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown")
-            elif "PDF+Video" in text:
-                await update.message.reply_text("📚 **Tutorial Videos & PDFs ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown")
             else:
-                await update.message.reply_text("🔓 ፕሪሚየም ነዎት! እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", parse_mode="Markdown")
+                await update.message.reply_text("📚 **Tutorial Videos & PDFs ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown")
         else:
             keyboard = [
                 [InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]
@@ -221,16 +238,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     elif data == "want_premium":
-        # ተጠቃሚው አዎ ካለ ስሙን እና ስትሪሙን እንዲጽፍ በ state ውስጥ እንመዝግበዋለን
         user_quiz_sessions.setdefault("awaiting_name_stream", set()).add(user.id)
         await query.message.reply_text(
             "መልካም! ሙሉ ስምዎን እና (Natural ወይስ Social) stream መሆንዎን ይንገሩኝ።\n"
             "(እባክዎ መልዕክትዎትን እዚህ ይጻፉልን 👇)"
         )
-        return
-
-    elif data == "contact_admin_prem":
-        await query.message.reply_text("📩 አድሚንን ለማነጋገር: @rmedial_matrix_support")
         return
 
     elif data.startswith("approve|") or data.startswith("dismiss|"):
@@ -255,7 +267,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             await context.bot.send_message(
                 chat_id=target_id,
-                text="❌ ይቅርታ፣ የክፍያ ስክሪንሾትዎ ውድቅ ተደርጓል። እባክዎ እንደገና ትክክለኛውን ክፍያ ፈጽመው ያረጋግጡ ወይም አድሚኑን ያነጋግሩ @rmedial_matrix_support"
+                text="❌ ይቅርታ፣ የክፍያ ስክሪንሾትዎ ውድቅ ተደርጓል። እባክዎ አድሚኑን ያነጋግሩ @rmedial_matrix_support"
             )
             await query.message.edit_caption(caption=query.message.caption + "\n\n❌ **Status: DISMISSED (ውድቅ ሆኗል)**")
         return
@@ -278,6 +290,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🏠 ዋና ምናሌ", callback_data="back_to_main")]
         ]
         await query.edit_message_text(f"📌 **{year} Model Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        return
+
+    elif data in ["rem_year_2015", "rem_year_2016", "rem_year_2017", "rem_year_2018"]:
+        year = data.split("_")[2]
+        keyboard = [
+            [InlineKeyboardButton("🧬 Biology", callback_data=f"q|remedial|{year}|Biology|0"),
+             InlineKeyboardButton("🧪 Chemistry", callback_data=f"q|remedial|{year}|Chemistry|0")],
+            [InlineKeyboardButton("📚 English", callback_data=f"q|remedial|{year}|English|0"),
+             InlineKeyboardButton("📜 History", callback_data=f"q|remedial|{year}|History|0")],
+            [InlineKeyboardButton("📐 Maths", callback_data=f"q|remedial|{year}|Maths|0"),
+             InlineKeyboardButton("🌍 Geography", callback_data=f"q|remedial|{year}|Geography|0")],
+            [InlineKeyboardButton("⚡ Physics", callback_data=f"q|remedial|{year}|Physics|0")],
+            [InlineKeyboardButton("🏠 ዋና ምናሌ", callback_data="back_to_main")]
+        ]
+        await query.edit_message_text(f"📌 **{year} Remedial National Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
         return
 
     elif data.startswith("trainer|"):
@@ -455,7 +482,6 @@ def main():
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("exams", start))
-    # ፎቶዎችን (ስክሪንሾት) እና ጽሁፎችን በአግባቡ የሚቀበለው ሀንድለር
     application.add_handler(MessageHandler((filters.TEXT | filters.PHOTO) & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(button_handler))
 
