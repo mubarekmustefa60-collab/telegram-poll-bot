@@ -3,8 +3,8 @@ import logging
 import os
 import threading
 from flask import Flask
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # የሎግ ማስተካከያ
 logging.basicConfig(
@@ -24,40 +24,54 @@ def load_questions():
             return json.load(f)
     return {}
 
-# 1. ዋናው ምናሌ: Model Exam ወይስ Remedial National Exam?
+# 1. /start ሲሉ የሚመጣው መደበኛ (Normal) ምናሌ
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("📝 Model Exam", callback_data="type_model"),
-         InlineKeyboardButton("🏛 Remedial National Exam", callback_data="type_remedial")]
+        [KeyboardButton("📝 Model Exam"), KeyboardButton("🏛 Remedial National Exam")],
+        [KeyboardButton("🎯 Exam Trainer Quiz")]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
     await update.message.reply_text(
         "👋 እንኳን ወደ **Remedial Matrix Quiz Bot** በደህና መጡ!\n\n"
-        "እባክዎ የሚፈልጉትን የፈተና ምድብ ይምረጡ:",
+        "እባክዎ ከታች ካሉት አማራጮች የሚፈልጉትን ይምረጡ:",
         reply_markup=reply_markup,
         parse_mode="Markdown"
     )
 
+# 2. ተጠቃሚው መደበኛውን ቁልፍ ሲነካ የሚሰጥ ምላሽ
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+
+    if text == "📝 Model Exam":
+        keyboard = [
+            [InlineKeyboardButton("📅 2017 Model", callback_data="model_year_2017"),
+             InlineKeyboardButton("📅 2018 Model", callback_data="model_year_2018")],
+            [InlineKeyboardButton("⬅️ ወደ ዋናው ምናሌ", callback_data="back_home")]
+        ]
+        await update.message.reply_text("📌 **Model Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+
+    elif text == "🏛 Remedial National Exam":
+        keyboard = [
+            [InlineKeyboardButton("📅 2015", callback_data="rem_year_2015"),
+             InlineKeyboardButton("📅 2016", callback_data="rem_year_2016")],
+            [InlineKeyboardButton("📅 2017", callback_data="rem_year_2017"),
+             InlineKeyboardButton("📅 2018", callback_data="rem_year_2018")],
+            [InlineKeyboardButton("⬅️ ወደ ዋናው ምናሌ", callback_data="back_home")]
+        ]
+        await update.message.reply_text("📌 **Remedial National Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+
+    elif text == "🎯 Exam Trainer Quiz":
+        await update.message.reply_text("🎯 **Exam Trainer Quiz** በቅርቡ ይለቀቃል! ይጠብቁን።", parse_mode="Markdown")
+
+# 3. የ Inline ቁልፎች (ዓመት እና ትምህርት አይነት) ማስተናገጃ
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
     data = query.data
 
-    # ----------------------------------------------------
-    # 2. MODEL EXAM ከሆኑ -> 2017 ወይስ 2018 ያስመርጣል
-    # ----------------------------------------------------
-    if data == "type_model":
-        keyboard = [
-            [InlineKeyboardButton("📅 2017 Model", callback_data="model_year_2017"),
-             InlineKeyboardButton("📅 2018 Model", callback_data="model_year_2018")],
-            [InlineKeyboardButton("⬅️ ወደ ዋናው ምናሌ", callback_data="back_home")]
-        ]
-        await query.edit_message_text("📌 **Model Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
-        return
-
-    elif data == "model_year_2017":
+    if data == "model_year_2017":
         keyboard = [
             [InlineKeyboardButton("🧬 Biology", callback_data="model_2017_biology"),
              InlineKeyboardButton("🧪 Chemistry", callback_data="model_2017_chemistry")],
@@ -65,8 +79,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("📜 History", callback_data="model_2017_history")],
             [InlineKeyboardButton("📐 Maths", callback_data="model_2017_math"),
              InlineKeyboardButton("🌍 Geography", callback_data="model_2017_geography")],
-            [InlineKeyboardButton("⚡ Physics", callback_data="model_2017_physics")],
-            [InlineKeyboardButton("⬅️ ተመለስ", callback_data="type_model")]
+            [InlineKeyboardButton("⚡ Physics", callback_data="model_2017_physics")]
         ]
         await query.edit_message_text("📌 **2017 Model Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
         return
@@ -79,28 +92,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("📜 History", callback_data="model_2018_history")],
             [InlineKeyboardButton("📐 Maths", callback_data="model_2018_math"),
              InlineKeyboardButton("🌍 Geography", callback_data="model_2018_geography")],
-            [InlineKeyboardButton("⚡ Physics", callback_data="model_2018_physics")],
-            [InlineKeyboardButton("⬅️ ተመለስ", callback_data="type_model")]
+            [InlineKeyboardButton("⚡ Physics", callback_data="model_2018_physics")]
         ]
         await query.edit_message_text("📌 **2018 Model Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
         return
 
-    # ----------------------------------------------------
-    # 3. REMEDIAL NATIONAL EXAM ከሆኑ -> 2015, 2016, 2017 ወይስ 2018 ያስመርጣል
-    # ----------------------------------------------------
-    elif data == "type_remedial":
-        keyboard = [
-            [InlineKeyboardButton("📅 2015", callback_data="rem_year_2015"),
-             InlineKeyboardButton("📅 2016", callback_data="rem_year_2016")],
-            [InlineKeyboardButton("📅 2017", callback_data="rem_year_2017"),
-             InlineKeyboardButton("📅 2018", callback_data="rem_year_2018")],
-            [InlineKeyboardButton("⬅️ ወደ ዋናው ምናሌ", callback_data="back_home")]
-        ]
-        await query.edit_message_text("📌 **Remedial National Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
-        return
-
     elif data in ["rem_year_2015", "rem_year_2016", "rem_year_2017", "rem_year_2018"]:
-        year = data.split("_")[2] # ዓመቱን ይወስዳል (2015, 2016, ወዘተ)
+        year = data.split("_")[2]
         keyboard = [
             [InlineKeyboardButton("🧬 Biology", callback_data=f"remedial_{year}_biology"),
              InlineKeyboardButton("🧪 Chemistry", callback_data=f"remedial_{year}_chemistry")],
@@ -108,24 +106,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("📜 History", callback_data=f"remedial_{year}_history")],
             [InlineKeyboardButton("📐 Maths", callback_data=f"remedial_{year}_math"),
              InlineKeyboardButton("🌍 Geography", callback_data=f"remedial_{year}_geography")],
-            [InlineKeyboardButton("⚡ Physics", callback_data=f"remedial_{year}_physics")],
-            [InlineKeyboardButton("⬅️ ተመለስ", callback_data="type_remedial")]
+            [InlineKeyboardButton("⚡ Physics", callback_data=f"remedial_{year}_physics")]
         ]
         await query.edit_message_text(f"📌 **{year} Remedial National Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
         return
 
-    # 4. ወደ ዋናው ምናሌ መመለሻ
     elif data == "back_home":
-        keyboard = [
-            [InlineKeyboardButton("📝 Model Exam", callback_data="type_model"),
-             InlineKeyboardButton("🏛 Remedial National Exam", callback_data="type_remedial")]
-        ]
-        await query.edit_message_text("👋 እባክዎ የሚፈልጉትን የፈተና ምድብ ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.message.delete()
         return
 
-    # ----------------------------------------------------
-    # 5. ጥያቄውን ከ JSON ፈልጎ በ Poll መልክ መላክ
-    # ----------------------------------------------------
+    # ጥያቄውን ከ JSON ፈልጎ በ Poll መልክ መላክ
     questions_data = load_questions()
     exam = questions_data.get(data)
     
@@ -148,16 +138,15 @@ def main():
         print("ስህተት: የቦት ቶከን (BOT_TOKEN) አልተገኘም!")
         return
 
-    # 1. Flask ሰርቨርን በ Background Thread ማስጀመር
     port = int(os.environ.get("PORT", 5000))
     flask_thread = threading.Thread(target=lambda: app_flask.run(host='0.0.0.0', port=port, use_reloader=False))
     flask_thread.daemon = True
     flask_thread.start()
 
-    # 2. ቴሌግራም ቦትን በ Main Thread ማስጀመር (ይህ ስህተቱን ያስወግደዋል)
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("exams", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(button_handler))
 
     print("Telegram Bot በመጀመር ላይ ነው...")
