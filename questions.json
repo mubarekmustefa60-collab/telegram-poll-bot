@@ -1,260 +1,351 @@
 {
-  "model_2017_biology": {
-    "question": "የ 2017 Model Exam - Biology ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2017_chemistry": {
-    "question": "የ 2017 Model Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2017_english": {
-    "question": "የ 2017 Model Exam - English ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2017_history": {
-    "question": "የ 2017 Model Exam - History ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2017_math": {
-    "question": "የ 2017 Model Exam - Maths ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2017_geography": {
-    "question": "የ 2017 Model Exam - Geography ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2017_physics": {
-    "question": "የ 2017 Model Exam - Physics ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
+  "model_2017_biology": [
+    {
+      "question": "1. What is the primary purpose of a control group in an experiment?",
+      "options": ["To test multiple variables at once", "To provide a baseline for comparison", "To eliminate all sources of error", "To confirm the hypothesis"],
+      "correct": 1,
+      "explanation": "A control group provides a baseline for comparison, allowing researchers to isolate the effect of the independent variable."
+    },
+    {
+      "question": "2. Which step of the scientific method involves making an educated guess?",
+      "options": ["Observation", "Hypothesis", "Experimentation", "Conclusion"],
+      "correct": 1,
+      "explanation": "A hypothesis is a testable, educated guess proposed as a tentative explanation for an observation."
+    },
+    {
+      "question": "3. A light microscope is most suitable for observing:",
+      "options": ["Individual atoms", "Living cells in a drop of pond water", "Internal structures of mitochondria", "Viral particles"],
+      "correct": 1,
+      "explanation": "Light microscopes can view living cells because they use visible light and do not require the harsh preparation (e.g., vacuum, heavy staining) needed for electron microscopy."
+    },
+    {
+      "question": "4. A theory is best defined as:",
+      "options": ["A random guess", "A hypothesis supported by one experiment", "A well-substantiated explanation confirmed by repeated testing", "A mathematical model"],
+      "correct": 2,
+      "explanation": "In science, a theory is a well-substantiated explanation acquired through the scientific method and repeatedly tested and confirmed through observation and experimentation."
+    },
+    {
+      "question": "5. In an experiment testing fertilizer effects on plant growth, the dependent variable is:",
+      "options": ["Type of fertilizer", "Amount of sunlight", "Plant height", "Soil pH"],
+      "correct": 2,
+      "explanation": "The dependent variable is what is measured in the experiment; here, plant height is the outcome being measured."
+    },
+    {
+      "question": "6. Which of the following is a quantitative observation?",
+      "options": ["The leaves are green.", "The solution turned blue.", "The plant grew 15 cm in 7 days.", "The enzyme reaction is fast."],
+      "correct": 2,
+      "explanation": "Quantitative observations involve measurements or numbers; '15 cm in 7 days' is a numerical measurement."
+    },
+    {
+      "question": "7. The resolution of a microscope refers to its ability to:",
+      "options": ["Magnify an object", "Distinguish between two adjacent points", "Illuminate a specimen", "Focus on thick tissues"],
+      "correct": 1,
+      "explanation": "Resolution (resolving power) is the ability to distinguish two adjacent points as separate entities."
+    },
+    {
+      "question": "8. A scientist publishes their findings in a peer-reviewed journal to:",
+      "options": ["Gain fame", "Ensure validity through expert scrutiny", "Avoid replication", "Protect intellectual property"],
+      "correct": 1,
+      "explanation": "Peer review subjects research to scrutiny by independent experts, helping ensure validity and quality before publication."
+    },
+    {
+      "question": "9. Which of the following is NOT a characteristic of a good hypothesis?",
+      "options": ["Falsifiable", "Based on prior knowledge", "Vague and broad", "Testable"],
+      "correct": 2,
+      "explanation": "A good hypothesis must be specific and testable, not vague and broad."
+    },
+    {
+      "question": "10. A double-blind experiment is designed to:",
+      "options": ["Test two hypotheses at once", "Minimize bias from participants and researchers", "Use two control groups", "Double the sample size"],
+      "correct": 1,
+      "explanation": "In a double-blind study, neither participants nor researchers know who is in the treatment or control group, minimizing bias."
+    },
+    {
+      "question": "11. Water's high specific heat is primarily due to:",
+      "options": ["Hydrogen bonding", "Covalent bonds", "Ionic interactions", "Van der Waals forces"],
+      "correct": 0,
+      "explanation": "Hydrogen bonds between water molecules require significant energy to break, giving water a high specific heat capacity."
+    },
+    {
+      "question": "12. A pH of 3 indicates a solution is:",
+      "options": ["Strongly acidic", "Weakly acidic", "Neutral", "Basic"],
+      "correct": 0,
+      "explanation": "A pH of 3 is well below 7, indicating a strongly acidic solution."
+    },
+    {
+      "question": "13. Which carbohydrate is a structural component in plant cell walls?",
+      "options": ["Starch", "Glycogen", "Cellulose", "Chitin"],
+      "correct": 2,
+      "explanation": "Cellulose is the main structural polysaccharide in plant cell walls."
+    },
+    {
+      "question": "14. A saturated fatty acid contains:",
+      "options": ["No double bonds", "One double bond", "Two double bonds", "A branched chain"],
+      "correct": 0,
+      "explanation": "Saturated fatty acids have no double bonds between carbon atoms; they are 'saturated' with hydrogen."
+    },
+    {
+      "question": "15. The alpha-helix is an example of a protein's:",
+      "options": ["Primary structure", "Secondary structure", "Tertiary structure", "Quaternary structure"],
+      "correct": 1,
+      "explanation": "The alpha-helix is a common secondary structure stabilized by hydrogen bonds between backbone atoms."
+    },
+    {
+      "question": "16. Which element is found in all organic molecules?",
+      "options": ["Nitrogen", "Carbon", "Phosphorus", "Sulfur"],
+      "correct": 1,
+      "explanation": "Carbon is the backbone element of all organic molecules."
+    },
+    {
+      "question": "17. Enzymes speed up reactions by:",
+      "options": ["Increasing activation energy", "Lowering activation energy", "Releasing heat", "Changing the equilibrium"],
+      "correct": 1,
+      "explanation": "Enzymes are catalysts that lower the activation energy required for a reaction, speeding it up."
+    },
+    {
+      "question": "18. ATP releases energy when:",
+      "options": ["A phosphate group is added", "A phosphate group is removed", "It binds to an enzyme", "It forms a covalent bond"],
+      "correct": 1,
+      "explanation": "ATP hydrolysis (removal of a phosphate group) releases energy that cells use for work."
+    },
+    {
+      "question": "19. A nucleotide consists of:",
+      "options": ["Sugar, protein, lipid", "Phosphate, sugar, base", "Glycerol, fatty acid, phosphate", "Amino acid, peptide bond, carboxyl group"],
+      "correct": 1,
+      "explanation": "Nucleotides are composed of a phosphate group, a five-carbon sugar, and a nitrogenous base."
+    },
+    {
+      "question": "20. Which lipid is a major component of cell membranes?",
+      "options": ["Triglyceride", "Phospholipid", "Steroid", "Wax"],
+      "correct": 1,
+      "explanation": "Phospholipids form the lipid bilayer that is the main structural component of cell membranes."
+    },
+    {
+      "question": "21. Disaccharides are formed by:",
+      "options": ["Hydrolysis", "Dehydration synthesis", "Oxidation", "Reduction"],
+      "correct": 1,
+      "explanation": "Dehydration synthesis (condensation) joins two monosaccharides with the removal of a water molecule to form a disaccharide."
+    },
+    {
+      "question": "22. A buffer helps maintain homeostasis by:",
+      "options": ["Neutralizing acids and bases", "Increasing pH fluctuations", "Speeding up reactions", "Storing energy"],
+      "correct": 0,
+      "explanation": "Buffers resist changes in pH by neutralizing small amounts of added acids or bases."
+    },
+    {
+      "question": "23. Which organic molecule stores genetic information?",
+      "options": ["Carbohydrate", "Lipid", "Protein", "Nucleic acid"],
+      "correct": 3,
+      "explanation": "Nucleic acids (DNA and RNA) store and transmit genetic information."
+    },
+    {
+      "question": "24. The tertiary structure of a protein is stabilized by:",
+      "options": ["Peptide bonds", "Hydrogen bonds and disulfide bridges", "Ionic bonds only", "Covalent bonds only"],
+      "correct": 1,
+      "explanation": "Tertiary structure is stabilized by interactions such as hydrogen bonds, disulfide bridges, hydrophobic interactions, and ionic bonds."
+    },
+    {
+      "question": "25. Cholesterol is classified as a:",
+      "options": ["Carbohydrate", "Protein", "Steroid", "Nucleic acid"],
+      "correct": 2,
+      "explanation": "Cholesterol is a steroid lipid, characterized by its four fused carbon rings."
+    },
+    {
+      "question": "26. Which polysaccharide is used for energy storage in animals?",
+      "options": ["Cellulose", "Starch", "Glycogen", "Chitin"],
+      "correct": 2,
+      "explanation": "Glycogen is the storage polysaccharide in animals, mainly in the liver and muscles."
+    },
+    {
+      "question": "27. A solution with a pH of 12 is:",
+      "options": ["Acidic", "Neutral", "Basic", "Salty"],
+      "correct": 2,
+      "explanation": "A pH above 7 is basic (alkaline); pH 12 is strongly basic."
+    },
+    {
+      "question": "28. The function of hemoglobin is an example of a:",
+      "options": ["Structural protein", "Transport protein", "Enzymatic protein", "Storage protein"],
+      "correct": 1,
+      "explanation": "Hemoglobin transports oxygen in the blood, making it a transport protein."
+    },
+    {
+      "question": "29. Which bond connects amino acids in a protein?",
+      "options": ["Glycosidic", "Peptide", "Ester", "Phosphodiester"],
+      "correct": 1,
+      "explanation": "Peptide bonds form between the amino group of one amino acid and the carboxyl group of another."
+    },
+    {
+      "question": "30. A denatured protein loses its:",
+      "options": ["Primary structure", "Secondary and tertiary structure", "Amino acid sequence", "Covalent bonds"],
+      "correct": 1,
+      "explanation": "Denaturation disrupts secondary and tertiary structures (and often quaternary), but the primary amino acid sequence remains intact."
+    },
+    {
+      "question": "31. The cell theory states that:",
+      "options": ["All cells have a nucleus", "Cells arise from pre-existing cells", "Cells are impermeable", "Mitochondria are the powerhouse"],
+      "correct": 1,
+      "explanation": "One of the tenets of cell theory is that all cells arise from pre-existing cells."
+    },
+    {
+      "question": "32. Prokaryotic cells lack:",
+      "options": ["Ribosomes", "A cell membrane", "A nucleus", "Cytoplasm"],
+      "correct": 2,
+      "explanation": "Prokaryotic cells lack a membrane-bound nucleus; their genetic material is in the nucleoid region."
+    },
+    {
+      "question": "33. Which organelle synthesizes lipids?",
+      "options": ["Rough ER", "Smooth ER", "Golgi apparatus", "Lysosome"],
+      "correct": 1,
+      "explanation": "The smooth endoplasmic reticulum is the main site of lipid synthesis."
+    },
+    {
+      "question": "34. The function of the mitochondria is:",
+      "options": ["Photosynthesis", "Protein synthesis", "ATP production", "Lipid storage"],
+      "correct": 2,
+      "explanation": "Mitochondria are the site of aerobic respiration and produce most of the cell's ATP."
+    },
+    {
+      "question": "35. Osmosis is the diffusion of:",
+      "options": ["Glucose", "Water", "Ions", "Proteins"],
+      "correct": 1,
+      "explanation": "Osmosis is the movement of water molecules across a semipermeable membrane from high to low water potential."
+    },
+    {
+      "question": "36. Which process requires energy?",
+      "options": ["Diffusion", "Osmosis", "Active transport", "Facilitated diffusion"],
+      "correct": 2,
+      "explanation": "Active transport moves substances against their concentration gradient and requires energy (ATP)."
+    },
+    {
+      "question": "37. In which phase of cellular respiration is CO2 released?",
+      "options": ["Glycolysis", "Krebs cycle", "Electron transport chain", "Fermentation"],
+      "correct": 1,
+      "explanation": "Carbon dioxide is released during the Krebs cycle (citric acid cycle) as pyruvate is oxidized."
+    },
+    {
+      "question": "38. The final electron acceptor in aerobic respiration is:",
+      "options": ["NAD+", "Oxygen", "Water", "Carbon dioxide"],
+      "correct": 1,
+      "explanation": "Oxygen is the final electron acceptor in the electron transport chain, forming water when it accepts electrons."
+    },
+    {
+      "question": "39. Which structure is unique to plant cells?",
+      "options": ["Centriole", "Chloroplast", "Lysosome", "Flagellum"],
+      "correct": 1,
+      "explanation": "Chloroplasts are unique to plant cells (and some algae) and are the site of photosynthesis."
+    },
+    {
+      "question": "40. A hypertonic solution causes a cell to:",
+      "options": ["Swell", "Shrink", "Remain unchanged", "Burst"],
+      "correct": 1,
+      "explanation": "In a hypertonic solution, water leaves the cell by osmosis, causing it to shrink (crenate)."
+    },
+    {
+      "question": "41. Which of the following is NOT a type of microorganism?",
+      "options": ["Bacteria", "Protozoa", "Algae", "Fungi", "Plants"],
+      "correct": 4,
+      "explanation": "Plants are multicellular organisms, not microorganisms."
+    },
+    {
+      "question": "42. Viruses are considered non-living because they:",
+      "options": ["Cannot reproduce independently", "Lack genetic material", "Are smaller than bacteria", "Do not cause diseases"],
+      "correct": 0,
+      "explanation": "Viruses cannot reproduce independently; they require a host cell to replicate, which is a key reason they are considered non-living."
+    },
+    {
+      "question": "43. Which microorganism is prokaryotic?",
+      "options": ["Yeast", "Escherichia coli", "Plasmodium", "Penicillium mold"],
+      "correct": 1,
+      "explanation": "Escherichia coli is a bacterium, and bacteria are prokaryotes (lacking a true nucleus)."
+    },
+    {
+      "question": "44. The study of fungi is called:",
+      "options": ["Virology", "Mycology", "Bacteriology", "Parasitology"],
+      "correct": 1,
+      "explanation": "Mycology is the branch of biology concerned with the study of fungi."
+    },
+    {
+      "question": "45. Which structure is absent in all viruses?",
+      "options": ["Capsid", "DNA or RNA", "Ribosomes", "Envelope"],
+      "correct": 2,
+      "explanation": "Viruses lack ribosomes; they rely on the host cell's ribosomes for protein synthesis."
+    },
+    {
+      "question": "46. Which microorganism is used to produce yogurt?",
+      "options": ["Saccharomyces cerevisiae", "Lactobacillus bulgaricus", "Streptococcus pneumoniae", "Escherichia coli"],
+      "correct": 1,
+      "explanation": "Lactobacillus bulgaricus (along with Streptococcus thermophilus) is used in yogurt fermentation."
+    },
+    {
+      "question": "47. Nitrogen-fixing bacteria in root nodules of legumes belong to the genus:",
+      "options": ["Rhizobium", "Lactobacillus", "Salmonella", "Streptococcus"],
+      "correct": 0,
+      "explanation": "Rhizobium species form symbiotic relationships with legume roots and fix atmospheric nitrogen."
+    },
+    {
+      "question": "48. Bioremediation uses microorganisms to:",
+      "options": ["Synthesize antibiotics", "Clean up environmental pollutants", "Ferment bread", "Produce insulin"],
+      "correct": 1,
+      "explanation": "Bioremediation uses microorganisms to degrade or remove environmental pollutants."
+    },
+    {
+      "question": "49. Which microorganism is a source of the antibiotic penicillin?",
+      "options": ["Bacillus subtilis", "Penicillium chrysogenum", "Streptomyces griseus", "Aspergillus niger"],
+      "correct": 1,
+      "explanation": "Penicillium chrysogenum (formerly P. notatum) is the mold from which penicillin is derived."
+    },
+    {
+      "question": "50. Probiotics primarily contain:",
+      "options": ["Pathogenic bacteria", "Beneficial bacteria", "Viruses", "Fungal spores"],
+      "correct": 1,
+      "explanation": "Probiotics are live beneficial bacteria (e.g., Lactobacillus, Bifidobacterium) that provide health benefits when consumed."
+    }
+  ],
 
-  "model_2018_biology": {
-    "question": "የ 2018 Model Exam - Biology ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2018_chemistry": {
-    "question": "የ 2018 Model Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2018_english": {
-    "question": "የ 2018 Model Exam - English ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2018_history": {
-    "question": "የ 2018 Model Exam - History ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2018_math": {
-    "question": "የ 2018 Model Exam - Maths ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2018_geography": {
-    "question": "የ 2018 Model Exam - Geography ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "model_2018_physics": {
-    "question": "የ 2018 Model Exam - Physics ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
+  "model_2017_chemistry": [],
+  "model_2017_english": [],
+  "model_2017_history": [],
+  "model_2017_math": [],
+  "model_2017_geography": [],
+  "model_2017_physics": [],
 
-  "remedial_2015_biology": {
-    "question": "የ 2015 Remedial National Exam - Biology ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2015_chemistry": {
-    "question": "የ 2015 Remedial National Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2015_english": {
-    "question": "የ 2015 Remedial National Exam - English ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2015_history": {
-    "question": "የ 2015 Remedial National Exam - History ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2015_math": {
-    "question": "የ 2015 Remedial National Exam - Maths ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2015_geography": {
-    "question": "የ 2015 Remedial National Exam - Geography ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2015_physics": {
-    "question": "የ 2015 Remedial National Exam - Physics ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
+  "model_2018_biology": [],
+  "model_2018_chemistry": [],
+  "model_2018_english": [],
+  "model_2018_history": [],
+  "model_2018_math": [],
+  "model_2018_geography": [],
+  "model_2018_physics": [],
 
-  "remedial_2016_biology": {
-    "question": "የ 2016 Remedial National Exam - Biology ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2016_chemistry": {
-    "question": "የ 2016 Remedial National Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2016_english": {
-    "question": "የ 2016 Remedial National Exam - English ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2016_history": {
-    "question": "የ 2016 Remedial National Exam - History ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2016_math": {
-    "question": "የ 2016 Remedial National Exam - Maths ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2016_geography": {
-    "question": "የ 2016 Remedial National Exam - Geography ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2016_physics": {
-    "question": "የ 2016 Remedial National Exam - Physics ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
+  "remedial_2015_biology": [],
+  "remedial_2015_chemistry": [],
+  "remedial_2015_english": [],
+  "remedial_2015_history": [],
+  "remedial_2015_math": [],
+  "remedial_2015_geography": [],
+  "remedial_2015_physics": [],
 
-  "remedial_2017_biology": {
-    "question": "የ 2017 Remedial National Exam - Biology ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2017_chemistry": {
-    "question": "የ 2017 Remedial National Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2017_english": {
-    "question": "የ 2017 Remedial National Exam - English ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2017_history": {
-    "question": "የ 2017 Remedial National Exam - History ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2017_math": {
-    "question": "የ 2017 Remedial National Exam - Maths ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2017_geography": {
-    "question": "የ 2017 Remedial National Exam - Geography ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2017_physics": {
-    "question": "የ 2017 Remedial National Exam - Physics ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
+  "remedial_2016_biology": [],
+  "remedial_2016_chemistry": [],
+  "remedial_2016_english": [],
+  "remedial_2016_history": [],
+  "remedial_2016_math": [],
+  "remedial_2016_geography": [],
+  "remedial_2016_physics": [],
 
-  "remedial_2018_biology": {
-    "question": "የ 2018 Remedial National Exam - Biology ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2018_chemistry": {
-    "question": "የ 2018 Remedial National Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2018_english": {
-    "question": "የ 2018 Remedial National Exam - English ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2018_history": {
-    "question": "የ 2018 Remedial National Exam - History ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2018_math": {
-    "question": "የ 2018 Remedial National Exam - Maths ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2018_geography": {
-    "question": "የ 2018 Remedial National Exam - Geography ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  },
-  "remedial_2018_physics": {
-    "question": "የ 2018 Remedial National Exam - Physics ጥያቄ እዚህ ይጻፍ...",
-    "options": ["ሀ", "ለ", "ሐ", "መ"],
-    "correct": 0,
-    "explanation": "ማብራሪያ..."
-  }
+  "remedial_2017_biology": [],
+  "remedial_2017_chemistry": [],
+  "remedial_2017_english": [],
+  "remedial_2017_history": [],
+  "remedial_2017_math": [],
+  "remedial_2017_geography": [],
+  "remedial_2017_physics": [],
+
+  "remedial_2018_biology": [],
+  "remedial_2018_chemistry": [],
+  "remedial_2018_english": [],
+  "remedial_2018_history": [],
+  "remedial_2018_math": [],
+  "remedial_2018_geography": [],
+  "remedial_2018_physics": []
 }
-
