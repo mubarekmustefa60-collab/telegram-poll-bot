@@ -24,11 +24,10 @@ def load_questions():
             return json.load(f)
     return {}
 
-# ዴታቤዝ እና ተጠቃሚዎችን ለመያዝ
 user_quiz_sessions = {}
-user_bot_stats = {"total_users": set(), "users_list": {}} # ተጠቃሚዎችን ለመከታተል
-premium_users = set() # ፕሪሚየም ተጠቃሚዎች
-leaderboard_data = [] # ሊደርቦርድ ([{'name': ..., 'score': ..., 'subject': ...}])
+user_bot_stats = {"total_users": set(), "users_list": {}}
+premium_users = set()
+leaderboard_data = []
 ADMIN_ID = 6183608197
 
 def get_all_questions_for_subject(data, subject):
@@ -80,7 +79,6 @@ def parse_question_data(q):
     explanation = q.get("explanation", "")
     return q_text, options_list, correct_id, explanation
 
-# ዋናው ምናሌ
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_bot_stats["total_users"].add(user.id)
@@ -93,7 +91,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [KeyboardButton("👨‍💻 Contact Admin")]
     ]
     
-    # አድሚን ከሆነ የ Admin Control አዝራርን መጨመር
     if user.id == ADMIN_ID:
         keyboard.append([KeyboardButton("⚙️ Admin Control")])
 
@@ -106,17 +103,32 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-# መደበኛ መልዕክቶች እና ፎቶዎች (ስክሪን ሾት መቀበያ) ማስተናገጃ
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_bot_stats["total_users"].add(user.id)
     
-    # ተጠቃሚው ስክሪንሾት (ፎቶ) ከላከ
+    # 1. ተጠቃሚው ስሙን እና ስትሪሙን ከጻፈ በኋላ የሚቀበለው ክፍል
+    if user.id in user_quiz_sessions.get("awaiting_name_stream", set()):
+        user_quiz_sessions["awaiting_name_stream"].remove(user.id)
+        user_quiz_sessions.setdefault("awaiting_payment_approval", set()).add(user.id)
+        
+        bank_text = (
+            "መልካም! ፕሪሚየም ለመሆን ተቃርበዋል 🎉\n\n"
+            "በሚከተሉት የባንክ አካውንት አማራጮች **300 ብር** ብቻ በመክፈል ሙሉ ዓመቱን ከኛ ጋር ፕሪሚየም ሆነው መማር ይችላሉ፦\n\n"
+            "🏦 **CBE:** `1000667301673`\n"
+            "📱 **TELEBIRR:** `0929698365`\n"
+            "📱 **CBE BIRR:** `0929698365`\n\n"
+            "ከነዚህ ውስጥ በተመቸዎት አማራጭ 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶ እዚህ ጋ ይላኩ 👇\n\n"
+            "ስክሪንሾቱን ሲልኩልኝ አድሚኑ አረጋግጦ ፕሪሚየም ያደርግዎታል።"
+        )
+        await update.message.reply_text(bank_text, parse_mode="Markdown")
+        return
+
+    # 2. ተጠቃሚው የክፍያ ስክሪንሾት (ፎቶ) ከላከ
     if update.message.photo:
         if user.id in user_quiz_sessions.get("awaiting_payment_approval", set()):
             photo_file = update.message.photo[-1].file_id
             
-            # ለአድሚን ማሳወቂያ መላክ
             approval_kb = [
                 [InlineKeyboardButton("✅ Approve (አጽድቅ)", callback_data=f"approve|{user.id}"),
                  InlineKeyboardButton("❌ Dismiss (ውድቅ አድርግ)", callback_data=f"dismiss|{user.id}")]
@@ -128,7 +140,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(approval_kb),
                 parse_mode="Markdown"
             )
-            await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል። አድሚኑ ሲያረጋግጠው ፕሪሚየም አካውንትዎ ይከፈታል!")
+            await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል። አድሚኑ ሲያረጋግጠው ፕሪሚየም አካውንትዎ በቅርቡ ይከፈታል!")
             return
 
     text = update.message.text
@@ -150,7 +162,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await update.message.reply_text("🔓 ፕሪሚየም ነዎት! እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", parse_mode="Markdown")
         else:
-            # ፕሪሚየም ላልሆኑ ተጠቃሚዎች የሚወጣው መልዕክት
             keyboard = [
                 [InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]
             ]
@@ -198,7 +209,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.message.reply_text(admin_text, parse_mode="Markdown")
 
-# Inline አዝራሮች ማስተናገጃ
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -211,9 +221,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     elif data == "want_premium":
+        # ተጠቃሚው አዎ ካለ ስሙን እና ስትሪሙን እንዲጽፍ በ state ውስጥ እንመዝግበዋለን
+        user_quiz_sessions.setdefault("awaiting_name_stream", set()).add(user.id)
         await query.message.reply_text(
             "መልካም! ሙሉ ስምዎን እና (Natural ወይስ Social) stream መሆንዎን ይንገሩኝ።\n"
-            "(እባክዎ መልዕክትዎትን ይጻፉልን)"
+            "(እባክዎ መልዕክትዎትን እዚህ ይጻፉልን 👇)"
         )
         return
 
@@ -221,7 +233,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("📩 አድሚንን ለማነጋገር: @rmedial_matrix_support")
         return
 
-    # አድሚን ክፍያ ሲያጸድቅ (Approve / Dismiss)
     elif data.startswith("approve|") or data.startswith("dismiss|"):
         if user.id != ADMIN_ID:
             return
@@ -230,12 +241,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if action == "approve":
             premium_users.add(target_id)
+            if target_id in user_quiz_sessions.get("awaiting_payment_approval", set()):
+                user_quiz_sessions["awaiting_payment_approval"].remove(target_id)
+            
             await context.bot.send_message(
                 chat_id=target_id,
                 text="🎉 **እንኳን ደስ አለዎት!** ክፍያዎ በአድሚን ጸድቋል። አሁን ሁሉም ፕሪሚየም አዝራሮች እና Private Tutorial Class ተከፍተውልዎታል!"
             )
             await query.message.edit_caption(caption=query.message.caption + "\n\n✅ **Status: APPROVED (ጸድቋል)**")
         else:
+            if target_id in user_quiz_sessions.get("awaiting_payment_approval", set()):
+                user_quiz_sessions["awaiting_payment_approval"].remove(target_id)
+            
             await context.bot.send_message(
                 chat_id=target_id,
                 text="❌ ይቅርታ፣ የክፍያ ስክሪንሾትዎ ውድቅ ተደርጓል። እባክዎ እንደገና ትክክለኛውን ክፍያ ፈጽመው ያረጋግጡ ወይም አድሚኑን ያነጋግሩ @rmedial_matrix_support"
@@ -289,7 +306,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_trainer_question(context, query.message.chat_id, user_id)
         return
 
-    # Trainer መልስ (አንዱን ምርጫ ይምረጡ የሚል ማሳሰቢያ ያለው)
     if data.startswith("t_ans|"):
         parts = data.split("|")
         user_id = int(parts[1])
@@ -318,7 +334,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             total = session["total"]
             percentage = (score / total) * 100
 
-            # ወደ ሊደርቦርድ መጨመር
             leaderboard_data.append({
                 "name": user.full_name,
                 "score": score,
@@ -340,7 +355,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 del user_quiz_sessions[user_id]
         return
 
-    # Model Exam ጥያቄዎች (Back, Next, Main Menu አዝራሮች ያሉት)
     if data.startswith("q|"):
         parts = data.split("|")
         category = parts[1]
@@ -384,7 +398,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 explanation=explanation if explanation else None
             )
 
-            # የናቪጌሽን አዝራሮች (Back, Next, Main Menu)
             nav_buttons = []
             row = []
             if index > 0:
@@ -398,11 +411,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await context.bot.send_message(
                 chat_id=query.message.chat_id,
-                text="ለማስተካከል ወይም ለመቀጠል ከታች ያሉትን ቁልፎች ይጠቀሙ 👇",
+                text="ለማስተካከል ወይም ለመቀጠል ከታች ያሉትን ቁልፎች ይጠገቡ 👇",
                 reply_markup=InlineKeyboardMarkup(nav_buttons)
             )
 
-# Trainer ጥያቄዎችን መላኪያ (አንዱን ምርጫ ይምረጡ የሚል ማሳሰቢያ ያለው)
 async def send_trainer_question(context, chat_id, user_id):
     session = user_quiz_sessions.get(user_id)
     if not session:
@@ -443,7 +455,8 @@ def main():
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("exams", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    # ፎቶዎችን (ስክሪንሾት) እና ጽሁፎችን በአግባቡ የሚቀበለው ሀንድለር
+    application.add_handler(MessageHandler((filters.TEXT | filters.PHOTO) & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(button_handler))
 
     print("Telegram Bot በመጀመር ላይ ነው...")
