@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+import sqlite3
 import threading
 from flask import Flask
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
@@ -18,6 +19,100 @@ app_flask = Flask(__name__)
 def home():
     return "Remedial Matrix Quiz Bot is running successfully!"
 
+# ─── DATABASE SETUP (SQLite) ───
+DB_FILE = "bot_database.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY,
+            full_name TEXT,
+            username TEXT,
+            is_premium INTEGER DEFAULT 0
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS leaderboard (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_name TEXT,
+            score INTEGER,
+            subject TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+def db_add_user(user_id, full_name, username):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR IGNORE INTO users (user_id, full_name, username, is_premium) VALUES (?, ?, ?, 0)", 
+                   (user_id, full_name, username))
+    conn.commit()
+    conn.close()
+
+def db_set_premium(user_id, status=1):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET is_premium = ? WHERE user_id = ?", (status, user_id))
+    conn.commit()
+    conn.close()
+
+def db_is_premium(user_id):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_premium FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row and row[0] == 1
+
+def db_get_stats():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM users WHERE is_premium = 1")
+    premium_count = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM users WHERE is_premium = 0")
+    free_count = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT user_id, full_name, username, is_premium FROM users")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    users_list = [f"• {row[1]} (@{row[2] or 'No Username'}) - {'[Premium]' if row[3]==1 else '[Free]'}" for row in rows]
+    return total_users, premium_count, free_count, users_list
+
+def db_get_users_by_type(is_prem):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id FROM users WHERE is_premium = ?", (1 if is_prem else 0,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
+
+def db_add_leaderboard(name, score, subject):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO leaderboard (user_name, score, subject) VALUES (?, ?, ?)", (name, score, subject))
+    conn.commit()
+    conn.close()
+
+def db_get_leaderboard():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_name, score, subject FROM leaderboard ORDER BY score DESC LIMIT 10")
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"name": r[0], "score": r[1], "subject": r[2]} for r in rows]
+
+# ───────────────────────────────
+
 def load_questions():
     if os.path.exists("questions.json"):
         with open("questions.json", "r", encoding="utf-8") as f:
@@ -25,10 +120,6 @@ def load_questions():
     return {}
 
 user_quiz_sessions = {}
-user_bot_stats = {"total_users": set(), "users_list": {}}
-free_users = set()
-premium_users = set()
-leaderboard_data = []
 ADMIN_ID = 6183608197
 
 def get_all_questions_for_subject(data, subject):
@@ -84,12 +175,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
     
-    # ተጠቃሚውን መመዝገብ
-    user_bot_stats["total_users"].add(user.id)
-    user_bot_stats["users_list"][user.id] = f"{user.full_name} (@{user.username or 'No Username'})"
-    
-    if user.id != ADMIN_ID and user.id not in premium_users:
-        free_users.add(user.id)
+    db_add_user(user.id, user.full_name, user.username)
 
     if chat.type in ["group", "supergroup"]:
         await update.message.reply_text(
@@ -107,7 +193,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     
     if user.id == ADMIN_ID:
-        keyboard.append([KeyboardButton("⚙️ Admin Control")])
+        keyboard.append([KeyboardButton("Admin Control")])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -134,19 +220,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat.type in ["group", "supergroup"]:
         return
 
-    user_bot_stats["total_users"].add(user.id)
-    if user.id != ADMIN_ID and user.id not in premium_users:
-        free_users.add(user.id)
+    db_add_user(user.id, user.full_name, user.username)
     
-    if user.id not in user_bot_stats["users_list"]:
-        user_bot_stats["users_list"][user.id] = f"{user.full_name} (@{user.username or 'No Username'})"
-    
-    # አድሚን ብሮድካስት እንዲልክ መልዕክት ሲጠብቅ
     if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
         target_group = user_quiz_sessions.pop("broadcasting_target", "all")
         user_quiz_sessions["broadcasting_mode"].remove(user.id)
         
-        recipients = premium_users if target_group == "premium" else free_users
+        recipients = db_get_users_by_type(is_prem=True) if target_group == "premium" else db_get_users_by_type(is_prem=False)
         success_count = 0
         
         for uid in recipients:
@@ -203,7 +283,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("📌 **Model Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
 
     elif text == "🏛 Remedial National Exam 🔒":
-        if user.id in premium_users:
+        if db_is_premium(user.id):
             keyboard = [
                 [InlineKeyboardButton("📅 2015", callback_data="rem_year_2015"),
                  InlineKeyboardButton("📅 2016", callback_data="rem_year_2016")],
@@ -217,17 +297,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             msg = f"ሰላም {user.full_name}\nእስካሁን premium ተጠቃሚ አደሉም።\npremium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\npremium መሆን ይፈልጋሉ?"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
-    elif text == "📚 Tutorial PDF+Video 🔒":
-        if user.id in premium_users:
-            await update.message.reply_text("📚 **Tutorial Videos & PDFs ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
-        else:
-            keyboard = [[InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን premium ተጠቃሚ አደሉም።\npremium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\npremium መሆን ይፈልጋሉ?"
-            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
-
-    elif text == "🎓 Go to Tutorial Class 🔒":
-        if user.id in premium_users:
-            await update.message.reply_text("🎓 **Private Tutorial Class ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
+    elif text in ["📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
+        if db_is_premium(user.id):
+            await update.message.reply_text("🎓📚 **የፕሪሚየም ትምህርት ማዕከል ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
         else:
             keyboard = [[InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]]
             msg = f"ሰላም {user.full_name}\nእስካሁን premium ተጠቃሚ አደሉም።\npremium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\npremium መሆን ይፈልጋሉ?"
@@ -247,21 +319,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🎯 **Exam Trainer Quiz** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
 
     elif text == "🏆 Leaderboard":
-        if not leaderboard_data:
+        lb_list = db_get_leaderboard()
+        if not lb_list:
             await update.message.reply_text("🏆 እስካሁን የተመዘገበ የሊደርቦርድ መረጃ የለም። ፈተናዎችን በመስራት የመጀመሪያው ይሁኑ!", protect_content=True)
         else:
-            top_10 = sorted(leaderboard_data, key=lambda x: x['score'], reverse=True)[:10]
             lb_text = "🏆 **Top 10 Students Leaderboard** 🏆\n\n"
-            for i, st in enumerate(top_10, 1):
+            for i, st in enumerate(lb_list, 1):
                 lb_text += f"{i}. {st['name']} - *{st['score']} ነጥብ* ({st['subject']})\n"
             await update.message.reply_text(lb_text, parse_mode="Markdown", protect_content=True)
 
     elif text == "👨‍💻 Contact Admin":
         await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown", protect_content=True)
 
-    elif text == "⚙️ Admin Control" and user.id == ADMIN_ID:
-        total_count = len(user_bot_stats["total_users"])
-        active_list = "\n".join([f"• {name}" for uid, name in user_bot_stats["users_list"].items()]) or "ምንም ተጠቃሚ የለም"
+    elif text == "Admin Control" and user.id == ADMIN_ID:
+        total_count, prem_count, free_count, active_list_rows = db_get_stats()
+        active_list = "\n".join(active_list_rows) if active_list_rows else "ምንም ተጠቃሚ የለም"
+        
         admin_kb = [
             [InlineKeyboardButton("📢 Broadcast to Premium", callback_data="bc_premium"),
              InlineKeyboardButton("📢 Broadcast to Free", callback_data="bc_free")]
@@ -269,8 +342,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         admin_text = (
             f"⚙️ **Admin Control Panel**\n\n"
             f"👥 ጠቅላላ ተጠቃሚዎች: **{total_count}**\n"
-            f"💎 ፕሪሚየም ተጠቃሚዎች: **{len(premium_users)}**\n"
-            f"🆓 ነፃ ተጠቃሚዎች: **{len(free_users)}**\n\n"
+            f"💎 ፕሪሚየም ተጠቃሚዎች: **{prem_count}**\n"
+            f"🆓 ነፃ ተጠቃሚዎች: **{free_count}**\n\n"
             f"📋 **የተማሪዎች ዝርዝር:**\n{active_list}"
         )
         await update.message.reply_text(admin_text, reply_markup=InlineKeyboardMarkup(admin_kb), parse_mode="Markdown", protect_content=True)
@@ -314,9 +387,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         target_id = int(target_id_str)
 
         if action == "approve":
-            premium_users.add(target_id)
-            if target_id in free_users:
-                free_users.remove(target_id)
+            db_set_premium(target_id, 1)
             if target_id in user_quiz_sessions.get("awaiting_payment_approval", set()):
                 user_quiz_sessions["awaiting_payment_approval"].remove(target_id)
             
@@ -357,8 +428,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("📚 English", callback_data=f"q|model|{year}|English|0"),
              InlineKeyboardButton("📜 History", callback_data=f"q|model|{year}|History|0")],
             [InlineKeyboardButton("📐 Maths", callback_data=f"q|model|{year}|Maths|0"),
-             InlineKeyboardButton("🌍 Geography", callback_data=f"q|model|{year}|Geography|0")],
-            [InlineKeyboardButton("⚡ Physics", callback_data=f"q|model|{year}|Physics|0")],
+             InlineKeyboardButton("🌍 Geography", callback_data=f"q|model|{year}|Geography|0"),
+             InlineKeyboardButton("⚡ Physics", callback_data=f"q|model|{year}|Physics|0")],
             [InlineKeyboardButton("🏠 ዋና ምናሌ", callback_data="back_to_main")]
         ]
         await query.edit_message_text(f"📌 **{year} Model Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
@@ -372,8 +443,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("📚 English", callback_data=f"q|remedial|{year}|English|0"),
              InlineKeyboardButton("📜 History", callback_data=f"q|remedial|{year}|History|0")],
             [InlineKeyboardButton("📐 Maths", callback_data=f"q|remedial|{year}|Maths|0"),
-             InlineKeyboardButton("🌍 Geography", callback_data=f"q|remedial|{year}|Geography|0")],
-            [InlineKeyboardButton("⚡ Physics", callback_data=f"q|remedial|{year}|Physics|0")],
+             InlineKeyboardButton("🌍 Geography", callback_data=f"q|remedial|{year}|Geography|0"),
+             InlineKeyboardButton("⚡ Physics", callback_data=f"q|remedial|{year}|Physics|0")],
             [InlineKeyboardButton("🏠 ዋና ምናሌ", callback_data="back_to_main")]
         ]
         await query.edit_message_text(f"📌 **{year} Remedial National Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
@@ -433,11 +504,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             total = session["total"]
             percentage = (score / total) * 100
 
-            leaderboard_data.append({
-                "name": user.full_name,
-                "score": score,
-                "subject": session['subject']
-            })
+            db_add_leaderboard(user.full_name, score, session['subject'])
 
             feedback = "🌟 በጣም ድንቅ ስራ! በዚህሁ ቀጥል!" if percentage >= 80 else ("👍 ጥሩ ጥረት ነው!" if percentage >= 50 else "⚠️ በድጋሚ ይሞክሩ!")
 
