@@ -79,10 +79,21 @@ def parse_question_data(q):
     explanation = q.get("explanation", "")
     return q_text, options_list, correct_id, explanation
 
+# /start ሲሉ (ግሩፕ ውስጥ ከሆነ ወደ ፕራይቬት የሚወስድ ሎጂክ ጋር)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
+    chat = update.effective_chat
     user_bot_stats["total_users"].add(user.id)
     user_bot_stats["users_list"][user.id] = f"{user.full_name} (@{user.username})"
+
+    # ቦቱ ግሩፕ ውስጥ ከተጠራ
+    if chat.type in ["group", "supergroup"]:
+        await update.message.reply_text(
+            f"ሰላም {user.first_name}! 🎓 **Remedial Matrix** ግሩፕ ውስጥ ስለሆኑ እባክዎ ሙሉውን አገልግሎት ለማግኘት ከታች ባለው ሊንክ ወደ ፕራይቬት ቦታችን ይምጡ 👇\n\n"
+            f"👉 [@{context.bot.username}](https://t.me/{context.bot.username})",
+            parse_mode="Markdown"
+        )
+        return
 
     keyboard = [
         [KeyboardButton("📝 Model Exam"), KeyboardButton("🏛 Remedial National Exam 🔒")],
@@ -96,15 +107,29 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
+    banner_text = (
+        "🌟━━━━━━━━━━━━━━━━━━🌟\n"
+        "   🎓 **REMEDIAL MATRIX** 🎓\n"
+        "      *የስኬትዎ መንገድ!* 🚀\n"
+        "🌟━━━━━━━━━━━━━━━━━━🌟\n\n"
+        f"👋 እንኳን ደህና መጡ, **{user.first_name}**!\n\n"
+        "📌 *ማስታወሻ:* በ 🔒 ምልክት የተደረገባቸው አገልግሎቶች ለ **Premium** ተጠቃሚዎች ብቻ ክፍት ናቸው።"
+    )
+    
     await update.message.reply_text(
-        f"👋 እንኳን ወደ **Remedial Matrix Quiz Bot** በደህና መጡ, {user.first_name}!\n\n"
-        "📌 *ማስታወሻ:* በ 🔒 ምልክት የተደረገባቸው አገልግሎቶች ለ **Premium** ተጠቃሚዎች ብቻ ክፍት ናቸው።",
+        banner_text,
         reply_markup=reply_markup,
-        parse_mode="Markdown"
+        parse_mode="Markdown",
+        protect_content=True
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
+    chat = update.effective_chat
+    
+    if chat.type in ["group", "supergroup"]:
+        return
+
     user_bot_stats["total_users"].add(user.id)
     
     if user.id in user_quiz_sessions.get("awaiting_name_stream", set()):
@@ -119,7 +144,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📱 **CBE BIRR:** `0929698365`\n\n"
             "ከነዚህ ውስጥ በተመቸዎት አማራጭ 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶ እዚህ ጋ ይላኩ 👇"
         )
-        await update.message.reply_text(bank_text, parse_mode="Markdown")
+        await update.message.reply_text(bank_text, parse_mode="Markdown", protect_content=True)
         return
 
     if update.message.photo:
@@ -137,7 +162,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(approval_kb),
                 parse_mode="Markdown"
             )
-            await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል። አድሚኑ ሲያረጋግጠው ፕሪሚየም አካውንትዎ በቅርቡ ይከፈታል!")
+            await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል። አድሚኑ ሲያረጋግጠው ፕሪሚየም አካውንትዎ በቅርቡ ይከፈታል!", protect_content=True)
             return
 
     text = update.message.text
@@ -148,7 +173,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("📅 2018 Model", callback_data="model_year_2018")],
             [InlineKeyboardButton("❌ ዝጋ", callback_data="close_menu")]
         ]
-        await update.message.reply_text("📌 **Model Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await update.message.reply_text("📌 **Model Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
 
     elif text == "🏛 Remedial National Exam 🔒":
         if user.id in premium_users:
@@ -159,7 +184,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  InlineKeyboardButton("📅 2018", callback_data="rem_year_2018")],
                 [InlineKeyboardButton("❌ ዝጋ", callback_data="close_menu")]
             ]
-            await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+            await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
         else:
             keyboard = [
                 [InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]
@@ -167,28 +192,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             msg = (
                 f"ሰላም {user.full_name}\n"
                 "እስካሁን premium ተጠቃሚ አደሉም።\n"
-                "premium ሲሆኑ ሁሉም buttun ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\n"
+                "premium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\n"
                 "premium መሆን ይፈልጋሉ?"
             )
-            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
+            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
-    elif text in ["📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
+    elif text == "📚 Tutorial PDF+Video 🔒":
         if user.id in premium_users:
-            if "Tutorial Class" in text:
-                await update.message.reply_text("🎓 **Private Tutorial Class ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown")
-            else:
-                await update.message.reply_text("📚 **Tutorial Videos & PDFs ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown")
+            await update.message.reply_text("📚 **Tutorial Videos & PDFs ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
         else:
-            keyboard = [
-                [InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]
-            ]
-            msg = (
-                f"ሰላም {user.full_name}\n"
-                "እስካሁን premium ተጠቃሚ አደሉም።\n"
-                "premium ሲሆኑ ሁሉም buttun ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\n"
-                "premium መሆን ይፈልጋሉ?"
-            )
-            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
+            keyboard = [[InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]]
+            msg = f"ሰላም {user.full_name}\nእስካሁን premium ተጠቃሚ አደሉም።\npremium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\npremium መሆን ይፈልጋሉ?"
+            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
+
+    elif text == "🎓 Go to Tutorial Class 🔒":
+        if user.id in premium_users:
+            await update.message.reply_text("🎓 **Private Tutorial Class ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
+        else:
+            keyboard = [[InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]]
+            msg = f"ሰላም {user.full_name}\nእስካሁን premium ተጠቃሚ አደሉም።\npremium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\npremium መሆን ይፈልጋሉ?"
+            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text == "🎯 Exam Trainer Quiz":
         keyboard = [
@@ -201,20 +224,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("⚡ Physics", callback_data="trainer|Physics")],
             [InlineKeyboardButton("❌ ዝጋ", callback_data="close_menu")]
         ]
-        await update.message.reply_text("🎯 **Exam Trainer Quiz** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await update.message.reply_text("🎯 **Exam Trainer Quiz** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
 
     elif text == "🏆 Leaderboard":
         if not leaderboard_data:
-            await update.message.reply_text("🏆 እስካሁን የተመዘገበ የሊደርቦርድ መረጃ የለም። ፈተናዎችን በመስራት የመጀመሪያው ይሁኑ!")
+            await update.message.reply_text("🏆 እስካሁን የተመዘገበ የሊደርቦርድ መረጃ የለም። ፈተናዎችን በመስራት የመጀመሪያው ይሁኑ!", protect_content=True)
         else:
             top_10 = sorted(leaderboard_data, key=lambda x: x['score'], reverse=True)[:10]
             lb_text = "🏆 **Top 10 Students Leaderboard** 🏆\n\n"
             for i, st in enumerate(top_10, 1):
                 lb_text += f"{i}. {st['name']} - *{st['score']} ነጥብ* ({st['subject']})\n"
-            await update.message.reply_text(lb_text, parse_mode="Markdown")
+            await update.message.reply_text(lb_text, parse_mode="Markdown", protect_content=True)
 
     elif text == "👨‍💻 Contact Admin":
-        await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown")
+        await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown", protect_content=True)
 
     elif text == "⚙️ Admin Control" and user.id == ADMIN_ID:
         total_count = len(user_bot_stats["total_users"])
@@ -224,7 +247,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"👥 ቦቱን የተጠቀሙ ጠቅላላ ተማሪዎች ብዛት: **{total_count}**\n\n"
             f"📋 **የተማሪዎች ዝርዝር:**\n{active_list}"
         )
-        await update.message.reply_text(admin_text, parse_mode="Markdown")
+        await update.message.reply_text(admin_text, parse_mode="Markdown", protect_content=True)
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -241,7 +264,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_quiz_sessions.setdefault("awaiting_name_stream", set()).add(user.id)
         await query.message.reply_text(
             "መልካም! ሙሉ ስምዎን እና (Natural ወይስ Social) stream መሆንዎን ይንገሩኝ።\n"
-            "(እባክዎ መልዕክትዎትን እዚህ ይጻፉልን 👇)"
+            "(እባክዎ መልዕክትዎትን እዚህ ይጻፉልን 👇)",
+            protect_content=True
         )
         return
 
@@ -258,7 +282,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             await context.bot.send_message(
                 chat_id=target_id,
-                text="🎉 **እንኳን ደስ አለዎት!** ክፍያዎ በአድሚን ጸድቋል። አሁን ሁሉም ፕሪሚየም አዝራሮች እና Private Tutorial Class ተከፍተውልዎታል!"
+                text="🎉 **እንኳን ደስ አለዎት!** ክፍያዎ በአድሚን ጸድቋል። አሁን ሁሉም ፕሪሚየም አዝራሮች እና Private Tutorial Class ተከፍተውልዎታል!",
+                protect_content=True
             )
             await query.message.edit_caption(caption=query.message.caption + "\n\n✅ **Status: APPROVED (ጸድቋል)**")
         else:
@@ -267,7 +292,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             await context.bot.send_message(
                 chat_id=target_id,
-                text="❌ ይቅርታ፣ የክፍያ ስክሪንሾትዎ ውድቅ ተደርጓል። እባክዎ አድሚኑን ያነጋግሩ @rmedial_matrix_support"
+                text="❌ ይቅርታ፣ የክፍያ ስክሪንሾትዎ ውድቅ ተደርጓል። እባክዎ አድሚኑን ያነጋግሩ @rmedial_matrix_support",
+                protect_content=True
             )
             await query.message.edit_caption(caption=query.message.caption + "\n\n❌ **Status: DISMISSED (ውድቅ ሆኗል)**")
         return
@@ -315,7 +341,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         all_subject_qs = get_all_questions_for_subject(q_data, subject)
 
         if not all_subject_qs:
-            await query.message.reply_text(f"⚠️ በ {subject} ትምህርት ስር እስካሁን የተሞላ ጥያቄ አልተገኘም!")
+            await query.message.reply_text(f"⚠️ በ {subject} ትምህርት ስር እስካሁን የተሞላ ጥያቄ አልተገኘም!", protect_content=True)
             return
 
         random.shuffle(all_subject_qs)
@@ -340,7 +366,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         session = user_quiz_sessions.get(user_id)
         if not session:
-            await query.message.reply_text("⚠️ የፈተና ጊዜዎ አልቋል ወይም እንደገና መጀመር አለብዎት።")
+            await query.message.reply_text("⚠️ የፈተና ጊዜዎ አልቋል ወይም እንደገና መጀመር አለብዎት።", protect_content=True)
             return
 
         q_list = session["questions"]
@@ -376,7 +402,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"📊 መቶኛ: **{percentage:.1f}%**\n\n"
                 f"{feedback}"
             )
-            await query.message.reply_text(result_text, parse_mode="Markdown")
+            await query.message.reply_text(result_text, parse_mode="Markdown", protect_content=True)
             
             if user_id in user_quiz_sessions:
                 del user_quiz_sessions[user_id]
@@ -399,7 +425,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     exam_questions = v
 
         if not exam_questions:
-            await query.message.reply_text(f"⚠️ የ {year} {subject} ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!")
+            await query.message.reply_text(f"⚠️ የ {year} {subject} ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!", protect_content=True)
             return
 
         if index < len(exam_questions):
@@ -422,7 +448,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 is_anonymous=False,
                 type="quiz",
                 correct_option_id=correct_id,
-                explanation=explanation if explanation else None
+                explanation=explanation if explanation else None,
+                protect_content=True
             )
 
             nav_buttons = []
@@ -439,7 +466,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(
                 chat_id=query.message.chat_id,
                 text="ለማስተካከል ወይም ለመቀጠል ከታች ያሉትን ቁልፎች ይጠገቡ 👇",
-                reply_markup=InlineKeyboardMarkup(nav_buttons)
+                reply_markup=InlineKeyboardMarkup(nav_buttons),
+                protect_content=True
             )
 
 async def send_trainer_question(context, chat_id, user_id):
@@ -466,7 +494,7 @@ async def send_trainer_question(context, chat_id, user_id):
         f"❓ *{q_text}*\n\n"
         f"👉 **እባክዎ ከታች ካሉት አማራጮች አንዱን ምርጫ ይምረጡ:**"
     )
-    await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup, parse_mode="Markdown")
+    await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup, parse_mode="Markdown", protect_content=True)
 
 def main():
     TOKEN = os.getenv("BOT_TOKEN")
