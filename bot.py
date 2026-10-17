@@ -21,7 +21,6 @@ def home():
 
 # ─── DATABASE SETUP (SQLite) ───
 DB_FILE = "bot_database.db"
-TUTORIAL_GROUP_ID = -1003196904052  # የሰጡን ግሩፕ መታወቂያ
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
@@ -172,23 +171,11 @@ def parse_question_data(q):
     explanation = q.get("explanation", "")
     return q_text, options_list, correct_id, explanation
 
-# ተጠቃሚው ግሩፑ ውስጥ አባል መሆኑን የሚረጋገጥበት ፈተና
-async def check_and_update_membership(user_id, context):
-    try:
-        member = await context.bot.get_chat_member(chat_id=TUTORIAL_GROUP_ID, user_id=user_id)
-        if member.status in ["member", "administrator", "creator"]:
-            db_set_premium(user_id, 1)
-            return True
-    except Exception as e:
-        logging.error(f"Membership check error: {e}")
-    return False
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
     
     db_add_user(user.id, user.full_name, user.username)
-    await check_and_update_membership(user.id, context)
 
     if chat.type in ["group", "supergroup"]:
         await update.message.reply_text(
@@ -206,7 +193,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     
     if user.id == ADMIN_ID:
-        keyboard.append([KeyboardButton("Admin Control")])
+        keyboard.append([KeyboardButton("⚙️ Admin Control")])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -234,25 +221,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     db_add_user(user.id, user.full_name, user.username)
-    await check_and_update_membership(user.id, context)
     
-    if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
-        target_group = user_quiz_sessions.pop("broadcasting_target", "all")
-        user_quiz_sessions["broadcasting_mode"].remove(user.id)
-        
-        recipients = db_get_users_by_type(is_prem=True) if target_group == "premium" else db_get_users_by_type(is_prem=False)
-        success_count = 0
-        
-        for uid in recipients:
-            try:
-                await context.bot.copy_message(chat_id=uid, from_chat_id=update.message.chat_id, message_id=update.message.message_id)
-                success_count += 1
-            except Exception:
-                pass
-                
-        await update.message.reply_text(f"✅ ብሮድካስቱ በተሳካ ሁኔታ ለ **{success_count}** ተጠቃሚዎች ተልኳል!")
-        return
-
+    # 1. ፎቶ (ስክሪንሾት) ሲላክ
     if update.message.photo:
         photo_file = update.message.photo[-1].file_id
         
@@ -272,6 +242,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
     if not text:
+        return
+
+    # 2. አድሚን ብሮድካስት ሲልክ
+    if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
+        target_group = user_quiz_sessions.pop("broadcasting_target", "all")
+        user_quiz_sessions["broadcasting_mode"].remove(user.id)
+        
+        recipients = db_get_users_by_type(is_prem=True) if target_group == "premium" else db_get_users_by_type(is_prem=False)
+        success_count = 0
+        
+        for uid in recipients:
+            try:
+                await context.bot.copy_message(chat_id=uid, from_chat_id=update.message.chat_id, message_id=update.message.message_id)
+                success_count += 1
+            except Exception:
+                pass
+                
+        await update.message.reply_text(f"✅ ብሮድካስቱ በተሳካ ሁኔታ ለ **{success_count}** ተጠቃሚዎች ተልኳል!")
         return
 
     if text == "📝 Model Exam":
@@ -294,17 +282,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
         else:
             keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። የቱቶሪያል ግሩፓችን አባል በመሆን ፕሪሚየም መሆን ይችላሉ!"
+            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ፕሪሚየም ሲሆኑ ሁሉንም ጥያቄዎች እና ቱቶሪያሎች ማግኘት ይችላሉ።"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text in ["📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
-        # እዚህ ጋር ሲጫኑ ግሩፑ ውስጥ መሆናቸውን በድጋሚ እንፈትሻለን
-        is_member = await check_and_update_membership(user.id, context)
-        if is_member or db_is_premium(user.id):
+        if db_is_premium(user.id):
             await update.message.reply_text("🎓📚 **የፕሪሚየም ትምህርት ማዕከል ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
         else:
             keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን የፕሪሚየም ግሩፓችን አባል አይደሉም። እባክዎ በመጀመሪያ 300 ብር በመክፈል ወይም ግሩፓችንን በመቀላቀል VIP ይሁኑ!"
+            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ፕሪሚየም በመሆን Private Tutorial Class ይክፈቱ!"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text == "💎 VIP / ፕሪሚየም ለመሆን":
@@ -344,7 +330,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "👨‍💻 Contact Admin":
         await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown", protect_content=True)
 
-    elif text == "Admin Control" and user.id == ADMIN_ID:
+    elif text == "⚙️ Admin Control" and user.id == ADMIN_ID:
         total_count, prem_count, free_count, active_list_rows = db_get_stats()
         active_list = "\n".join(active_list_rows) if active_list_rows else "ምንም ተጠቃሚ የለም"
         
