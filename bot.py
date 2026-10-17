@@ -26,7 +26,8 @@ def load_questions():
 
 user_quiz_sessions = {}
 user_bot_stats = {"total_users": set(), "users_list": {}}
-premium_users = set()
+free_users = set() # ነፃ ተጠቃሚዎች
+premium_users = set() # ፕሪሚየም ተጠቃሚዎች
 leaderboard_data = []
 ADMIN_ID = 6183608197
 
@@ -79,14 +80,15 @@ def parse_question_data(q):
     explanation = q.get("explanation", "")
     return q_text, options_list, correct_id, explanation
 
-# /start ሲሉ (ግሩፕ ውስጥ ከሆነ ወደ ፕራይቬት የሚወስድ ሎጂክ ጋር)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
     user_bot_stats["total_users"].add(user.id)
     user_bot_stats["users_list"][user.id] = f"{user.full_name} (@{user.username})"
+    
+    if user.id not in premium_users:
+        free_users.add(user.id)
 
-    # ቦቱ ግሩፕ ውስጥ ከተጠራ
     if chat.type in ["group", "supergroup"]:
         await update.message.reply_text(
             f"ሰላም {user.first_name}! 🎓 **Remedial Matrix** ግሩፕ ውስጥ ስለሆኑ እባክዎ ሙሉውን አገልግሎት ለማግኘት ከታች ባለው ሊንክ ወደ ፕራይቬት ቦታችን ይምጡ 👇\n\n"
@@ -132,6 +134,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_bot_stats["total_users"].add(user.id)
     
+    # አድሚን ብሮድካስት እንዲልክ መልዕክት ሲጠብቅ
+    if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
+        target_group = user_quiz_sessions.pop("broadcasting_target", "all")
+        user_quiz_sessions["broadcasting_mode"].remove(user.id)
+        
+        recipients = premium_users if target_group == "premium" else free_users
+        success_count = 0
+        
+        for uid in recipients:
+            try:
+                await context.bot.copy_message(chat_id=uid, from_chat_id=update.message.chat_id, message_id=update.message.message_id)
+                success_count += 1
+            except Exception:
+                pass
+                
+        await update.message.reply_text(f"✅ ብሮድካስቱ በተሳካ ሁኔታ ለ **{success_count}** ተጠቃሚዎች ተልኳል!")
+        return
+
     if user.id in user_quiz_sessions.get("awaiting_name_stream", set()):
         user_quiz_sessions["awaiting_name_stream"].remove(user.id)
         user_quiz_sessions.setdefault("awaiting_payment_approval", set()).add(user.id)
@@ -186,15 +206,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]
             await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
         else:
-            keyboard = [
-                [InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]
-            ]
-            msg = (
-                f"ሰላም {user.full_name}\n"
-                "እስካሁን premium ተጠቃሚ አደሉም።\n"
-                "premium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\n"
-                "premium መሆን ይፈልጋሉ?"
-            )
+            keyboard = [[InlineKeyboardButton("✅ አዎ፣ ፕሪሚየም መሆን እፈልጋለሁ", callback_data="want_premium")]]
+            msg = f"ሰላም {user.full_name}\nእስካሁን premium ተጠቃሚ አደሉም።\npremium ሲሆኑ ሁሉም button ጨምሮ private tutorial class ክፍት ይደረግልዎታል።\n\npremium መሆን ይፈልጋሉ?"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text == "📚 Tutorial PDF+Video 🔒":
@@ -242,12 +255,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "⚙️ Admin Control" and user.id == ADMIN_ID:
         total_count = len(user_bot_stats["total_users"])
         active_list = "\n".join([f"• {name}" for uid, name in user_bot_stats["users_list"].items()])
+        admin_kb = [
+            [InlineKeyboardButton("📢 Broadcast to Premium", callback_data="bc_premium"),
+             InlineKeyboardButton("📢 Broadcast to Free", callback_data="bc_free")]
+        ]
         admin_text = (
             f"⚙️ **Admin Control Panel**\n\n"
-            f"👥 ቦቱን የተጠቀሙ ጠቅላላ ተማሪዎች ብዛት: **{total_count}**\n\n"
+            f"👥 ጠቅላላ ተጠቃሚዎች: **{total_count}**\n"
+            f"💎 ፕሪሚየም ተጠቃሚዎች: **{len(premium_users)}**\n"
+            f"🆓 ነፃ ተጠቃሚዎች: **{len(free_users)}**\n\n"
             f"📋 **የተማሪዎች ዝርዝር:**\n{active_list}"
         )
-        await update.message.reply_text(admin_text, parse_mode="Markdown", protect_content=True)
+        await update.message.reply_text(admin_text, reply_markup=InlineKeyboardMarkup(admin_kb), parse_mode="Markdown", protect_content=True)
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -258,6 +277,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "close_menu":
         await query.message.delete()
+        return
+
+    elif data == "bc_premium" and user.id == ADMIN_ID:
+        user_quiz_sessions.setdefault("broadcasting_mode", set()).add(user.id)
+        user_quiz_sessions["broadcasting_target"] = "premium"
+        await query.message.reply_text("📢 ለ **Premium** ተጠቃሚዎች መላክ የሚፈልጉትን መልዕክት (ወይም ፎቶ) አሁን ይላኩሱልኝ:")
+        return
+
+    elif data == "bc_free" and user.id == ADMIN_ID:
+        user_quiz_sessions.setdefault("broadcasting_mode", set()).add(user.id)
+        user_quiz_sessions["broadcasting_target"] = "free"
+        await query.message.reply_text("📢 ለ **Free** ተጠቃሚዎች መላክ የሚፈልጉትን መልዕክት (ወይም ፎቶ) አሁን ይላኩሱልኝ:")
         return
 
     elif data == "want_premium":
@@ -277,6 +308,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if action == "approve":
             premium_users.add(target_id)
+            if target_id in free_users:
+                free_users.remove(target_id)
             if target_id in user_quiz_sessions.get("awaiting_payment_approval", set()):
                 user_quiz_sessions["awaiting_payment_approval"].remove(target_id)
             
