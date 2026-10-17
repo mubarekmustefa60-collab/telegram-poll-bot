@@ -24,29 +24,24 @@ def load_questions():
             return json.load(f)
     return {}
 
-# የተጠቃሚዎችን የፈተና ውጤት እና ሂደት ለመያዝ (In-memory storage)
 user_quiz_sessions = {}
 
-# ከሁሉም የፈተና ዓይነቶች ጥያቄዎችን ሰብስቦ የማውጣት ሎጂክ
 def get_all_questions_for_subject(data, subject):
     all_qs = []
     subject_lower = subject.lower()
 
-    # 1. Model Exams መፈተሽ
     model_exams = data.get("model_exams", {})
     for year, subjects in model_exams.items():
         for s_name, q_list in subjects.items():
             if s_name.lower() == subject_lower or (subject_lower in ["math", "maths"] and s_name.lower() in ["math", "maths", "mathematics"]):
                 all_qs.extend(q_list)
 
-    # 2. Remedial Exams መፈተሽ
     remedial_exams = data.get("remedial_exams", {})
     for year, subjects in remedial_exams.items():
         for s_name, q_list in subjects.items():
             if s_name.lower() == subject_lower or (subject_lower in ["math", "maths"] and s_name.lower() in ["math", "maths", "mathematics"]):
                 all_qs.extend(q_list)
 
-    # 3. የቆየውን ፎርማት መፈተሽ
     for k, q_list in data.items():
         if isinstance(q_list, list) and subject_lower in k.lower():
             all_qs.extend(q_list)
@@ -80,7 +75,6 @@ def parse_question_data(q):
     explanation = q.get("explanation", "")
     return q_text, options_list, correct_id, explanation
 
-# 1. /start ሲሉ የሚመጣው ዋና ምናሌ (ከነ አዳዲሶቹ በተኖች ጋር)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [KeyboardButton("📝 Model Exam"), KeyboardButton("🏛 Remedial National Exam 🔒")],
@@ -97,7 +91,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-# 2. መደበኛ ቁልፎችን ማስተናገጃ
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -133,7 +126,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         await update.message.reply_text(
             "🎯 **Exam Trainer Quiz**\n\n"
-            "እባክዎ መለማመድ የሚፈልጉትን የትምህርት አይነት ይምረጡ (ከሁሉም ዓመታት የተውጣጡ ጥያቄዎች ይቀርቡልዎታል):",
+            "እባክዎ መለማመድ የሚፈልጉትን የትምህርት አይነት ይምረጡ:",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
@@ -143,8 +136,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("💎 አድምንን በማነጋገር ፕሪሚየም ይሁኑ", callback_data="contact_admin_prem")]
         ]
         await update.message.reply_text(
-            "🔒 **ይህ የትምህርት መደብ ለፕሪሚየም (Premium) ተጠቃሚዎች ብቻ የተዘጋጀ ነው!**\n\n"
-            "ቪዲዮዎችን እና የ PDF ማጠቃለያዎችን ለማግኘት አድምንን ያነጋግሩ።",
+            "🔒 **ይህ የትምህርት መደብ ለፕሪሚየም (Premium) ተጠቃሚዎች ብቻ የተዘጋጀ ነው!**",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
@@ -152,12 +144,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "👨‍💻 Contact Admin":
         await update.message.reply_text(
             "👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n\n"
-            "ማንኛውንም ጥያቄ፣ የፕሪሚየም ክፍያ ወይም ሀሳብ በዚህ ሊንክ ያድርሱን 👇\n"
             "📩 አድሚን: `@YourAdminUsername`",
             parse_mode="Markdown"
         )
 
-# 3. የ Inline ቁልፎች እና የጥያቄዎች ማስተናገጃ
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -169,14 +159,29 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     elif data == "contact_admin_prem":
-        await query.message.reply_text("📩 ፕሪሚየም ለመሆን እባክዎ አድምንን `@YourAdminUsername` ያነጋግሩ!")
+        await query.message.reply_text("📩 ፕሪሚየም ለመሆን አድምንን `@YourAdminUsername` ያነጋግሩ!")
+        return
+
+    # Model Exam ዓመት ሲመረጥ የትምህርት አይነቶችን ማሳየት (ይህ ነበር የጠፋው!)
+    elif data in ["model_year_2017", "model_year_2018"]:
+        year = data.split("_")[2]
+        keyboard = [
+            [InlineKeyboardButton("🧬 Biology", callback_data=f"q|model|{year}|Biology|0"),
+             InlineKeyboardButton("🧪 Chemistry", callback_data=f"q|model|{year}|Chemistry|0")],
+            [InlineKeyboardButton("📚 English", callback_data=f"q|model|{year}|English|0"),
+             InlineKeyboardButton("📜 History", callback_data=f"q|model|{year}|History|0")],
+            [InlineKeyboardButton("📐 Maths", callback_data=f"q|model|{year}|Maths|0"),
+             InlineKeyboardButton("🌍 Geography", callback_data=f"q|model|{year}|Geography|0")],
+            [InlineKeyboardButton("⚡ Physics", callback_data=f"q|model|{year}|Physics|0")],
+            [InlineKeyboardButton("❌ ዝጋ", callback_data="close_menu")]
+        ]
+        await query.edit_message_text(f"📌 **{year} Model Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
         return
 
     elif data.startswith("trainer|"):
         subject = data.split("|")[1]
         user_id = query.from_user.id
         
-        # ጥያቄዎችን ሰብስቦ ከ 30 እስከ 60 መምረጥ
         q_data = load_questions()
         all_subject_qs = get_all_questions_for_subject(q_data, subject)
 
@@ -184,12 +189,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.message.reply_text(f"⚠️ በ {subject} ትምህርት ስር እስካሁን የተሞላ ጥያቄ አልተገኘም!")
             return
 
-        # 30 እስከ 60 ጥያቄዎችን በራሱ ሎጂክ መምረጥ (ጥያቄዎቹ ካነሱ ያሉትን በሙሉ ይወስዳል)
         random.shuffle(all_subject_qs)
         total_to_pick = min(len(all_subject_qs), random.randint(30, 60))
         selected_qs = all_subject_qs[:total_to_pick]
 
-        # የሰለጣን ክፍለ ጊዜን ማስቀመጥ
         user_quiz_sessions[user_id] = {
             "subject": subject,
             "questions": selected_qs,
@@ -198,11 +201,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "total": len(selected_qs)
         }
 
-        # የመጀመሪያውን ጥያቄ መላክ
         await send_trainer_question(context, query.message.chat_id, user_id)
         return
 
-    # Trainer መልስ መቀበል እና መቀጠል
     if data.startswith("t_ans|"):
         parts = data.split("|")
         user_id = int(parts[1])
@@ -224,11 +225,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         session["index"] += 1
 
-        # ወደ ቀጣይ ጥያቄ ማለፍ ወይም ውጤት ማሳየት
         if session["index"] < len(q_list):
             await send_trainer_question(context, query.message.chat_id, user_id)
         else:
-            # ፈተናው አብቅቷል - ውጤት ማሳየት
             score = session["score"]
             total = session["total"]
             percentage = (score / total) * 100
@@ -237,9 +236,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if percentage >= 80:
                 feedback = "🌟 በጣም ድንቅ ስራ! በእጅጉ አሪፍ ውጤት ነው፤ በዚህሁ ቀጥል!"
             elif percentage >= 50:
-                feedback = "👍 ጥሩ ጥረት ነው! ነገር ግን ውጤትዎ የተሻለ እንዲሆን በደንብ መጠንከር እና መለማመድ ይኖርብዎታል።"
+                feedback = "👍 ጥሩ ጥረት ነው! ነገር ግን ውጤትዎ የተሻለ እንዲሆን በደንብ መጠንከር ይኖርብዎታል።"
             else:
-                feedback = "⚠️ ብዙ መሥራት ይጠበቅብዎታል። እባክዎ እንደገና ጽንሰ-ሀሳቦቹን ገምግመው በድጋሚ ይሞክሩ!"
+                feedback = "⚠️ ብዙ መሥራት ይጠበቅብዎታል። በድጋሚ ይሞክሩ!"
 
             result_text = (
                 f"🎯 **የ Exam Trainer Quiz ውጤትዎ**\n\n"
@@ -250,12 +249,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await query.message.reply_text(result_text, parse_mode="Markdown")
             
-            # ሴሽኑን ማጽዳት
             if user_id in user_quiz_sessions:
                 del user_quiz_sessions[user_id]
         return
 
-    # ነባር Model Exam እና Remedial አያያዥ
     if data.startswith("q|"):
         parts = data.split("|")
         category = parts[1]
@@ -264,16 +261,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         index = int(parts[4])
 
         questions_data = load_questions()
-        if category == "quiz":
-            exam_questions = questions_data.get("quizzes", [])
-        else:
-            cat_key = "model_exams" if category == "model" else "remedial_exams"
-            exam_questions = []
-            if cat_key in questions_data and year in questions_data[cat_key]:
-                year_data = questions_data[cat_key][year]
-                for k, v in year_data.items():
-                    if k.lower() == subject.lower():
-                        exam_questions = v
+        cat_key = "model_exams" if category == "model" else "remedial_exams"
+        exam_questions = []
+        if cat_key in questions_data and year in questions_data[cat_key]:
+            year_data = questions_data[cat_key][year]
+            for k, v in year_data.items():
+                if k.lower() == subject.lower():
+                    exam_questions = v
 
         if not exam_questions:
             await query.message.reply_text(f"⚠️ የ {year} {subject} ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!")
@@ -316,7 +310,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     parse_mode="Markdown"
                 )
 
-# Trainer ጥያቄዎችን በ Inline Button (Quiz format) መላኪያ
 async def send_trainer_question(context, chat_id, user_id):
     session = user_quiz_sessions.get(user_id)
     if not session:
@@ -331,7 +324,7 @@ async def send_trainer_question(context, chat_id, user_id):
 
     keyboard = []
     for i, opt in enumerate(options_list):
-        letter = chr(65 + i) # A, B, C, D
+        letter = chr(65 + i)
         keyboard.append([InlineKeyboardButton(f"{letter}. {opt}", callback_data=f"t_ans|{user_id}|{i}")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
