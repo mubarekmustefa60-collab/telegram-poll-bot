@@ -23,9 +23,8 @@ def load_questions():
             return json.load(f)
     return {}
 
-# ጥያቄዎችን ከአዲሱም ሆነ ከቆየው የ JSON አወቃቀር ፈልጎ የሚያመጣ ተግባር
+# ጥያቄዎችን ከአዲሱም ሆነ ከቆየው የ JSON አወቃቀር እንዲሁም የተለያየ ፎርማት ያላቸውን ፈልጎ የሚያመጣ ተግባር
 def get_exam_questions(data, category, year, subject):
-    # 1. አዲሱን አወቃቀር መፈተሽ (model_exams / remedial_exams -> year -> Subject)
     cat_key = "model_exams" if category == "model" else "remedial_exams"
     if cat_key in data and year in data[cat_key]:
         year_data = data[cat_key][year]
@@ -35,12 +34,48 @@ def get_exam_questions(data, category, year, subject):
             if subject.lower() in ["math", "maths", "mathematics"] and k.lower() in ["math", "maths", "mathematics"]:
                 return v
 
-    # 2. የቆየውን አወቃቀር መፈተሽ (ለምሳሌ model_2017_biology)
     flat_key = f"{category}_{year}_{subject.lower()}"
     if flat_key in data:
         return data[flat_key]
     
     return []
+
+# የተለያየ አወቃቀር ያላቸውን ጥያቄዎች (Options እና Answers) ወደ አንድ መደበኛ ቅርጸት የሚያስተካክል።
+def parse_question_data(q):
+    # 1. ጥያቄውን ማውጣት
+    q_text = q.get("question", "ጥያቄ አልተገኘም")
+    
+    # 2. አማራጮችን (Options) ማስተካከል (ሊስት ወይም ዲክሽነሪ ቢሆኑ)
+    options_raw = q.get("options", [])
+    if isinstance(options_raw, dict):
+        # እንደ {"A": "...", "B": "..."} ያሉትን ወደ ሊስት መቀየር
+        options_list = list(options_raw.values())
+    elif isinstance(options_raw, list):
+        options_list = options_raw
+    else:
+        options_list = ["Option A", "Option B", "Option C", "Option D"]
+
+    # 3. ትክክለኛውን መልስ (Correct Option ID) ማስተካከል (ቁጥር ወይም ፊደል ቢሆን)
+    correct_id = q.get("correct_option_id", None)
+    
+    if correct_id is None:
+        # እንደ "answer": "D" ያሉ የፊደል መልሶችን መፈተሽ
+        answer_letter = q.get("answer", q.get("correct", 0))
+        if isinstance(answer_letter, str):
+            letter_to_index = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+            correct_id = letter_to_index.get(answer_letter.upper(), 0)
+        elif isinstance(answer_letter, int):
+            correct_id = answer_letter
+        else:
+            correct_id = 0
+
+    # ከክልል ውጭ (IndexError) እንዳይፈጠር ማረጋገጥ
+    if not isinstance(correct_id, int) or correct_id < 0 or correct_id >= len(options_list):
+        correct_id = 0
+
+    explanation = q.get("explanation", "")
+
+    return q_text, options_list, correct_id, explanation
 
 # 1. /start ሲሉ የሚመጣው መደበኛ (Normal) ምናሌ
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -85,7 +120,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not quizzes:
             await update.message.reply_text("🎯 **Exam Trainer Quiz** በቅርቡ ይለቀቃል! ይጠብቁን።", parse_mode="Markdown")
         else:
-            # በ quizzes ውስጥ ጥያቄ ካለ የመጀመሪያውን ይልካል
             kb = [[InlineKeyboardButton("🚀 ጥያቄዎችን ጀምር", callback_data="q|quiz|all|all|0")]]
             await update.message.reply_text("🎯 **Exam Trainer Quiz** ለመጀመር ከታች ያለውን ቁልፍ ይጫኑ:", reply_markup=InlineKeyboardMarkup(kb), parse_mode="Markdown")
 
@@ -176,14 +210,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             q = exam_questions[index]
             total = len(exam_questions)
             
+            # የተለያየ ፎርማት ያላቸውን ጥያቄዎች በአግባቡ ማስተካከል
+            q_text_raw, options_list, correct_id, explanation_raw = parse_question_data(q)
+
             # የቴሌግራም Poll ገደቦችን መጠበቅ (Question max 300, Option max 100, Explanation max 200)
-            q_text = f"[{index + 1}/{total}] {q['question']}"
+            q_text = f"[{index + 1}/{total}] {q_text_raw}"
             if len(q_text) > 300:
                 q_text = q_text[:297] + "..."
                 
-            options = [str(opt)[:100] for opt in q["options"]]
-            correct_id = q.get("correct_option_id", q.get("correct", 0))
-            explanation = q.get("explanation", "")
+            options = [str(opt)[:100] for opt in options_list]
+            
+            explanation = explanation_raw if explanation_raw else ""
             if explanation and len(explanation) > 200:
                 explanation = explanation[:197] + "..."
 
