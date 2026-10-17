@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import threading
-import asyncio
 from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -143,15 +142,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.message.reply_text("⚠️ ይህ ጥያቄ በፋይሉ ውስጥ ገና አልተሞላም!")
 
-def run_telegram_bot():
+def main():
     TOKEN = os.getenv("BOT_TOKEN")
     if not TOKEN:
         print("ስህተት: የቦት ቶከን (BOT_TOKEN) አልተገኘም!")
         return
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    # 1. Flask ሰርቨርን በ Background Thread ማስጀመር
+    port = int(os.environ.get("PORT", 5000))
+    flask_thread = threading.Thread(target=lambda: app_flask.run(host='0.0.0.0', port=port, use_reloader=False))
+    flask_thread.daemon = True
+    flask_thread.start()
 
+    # 2. ቴሌግራም ቦትን በ Main Thread ማስጀመር (ይህ ስህተቱን ያስወግደዋል)
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("exams", start))
@@ -161,9 +164,4 @@ def run_telegram_bot():
     application.run_polling()
 
 if __name__ == '__main__':
-    bot_thread = threading.Thread(target=run_telegram_bot)
-    bot_thread.daemon = True
-    bot_thread.start()
-
-    port = int(os.environ.get("PORT", 5000))
-    app_flask.run(host='0.0.0.0', port=port)
+    main()
