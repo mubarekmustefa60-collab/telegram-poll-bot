@@ -222,6 +222,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     db_add_user(user.id, user.full_name, user.username)
     
+    # 1. ፎቶ (ስክሪንሾት) ሲላክ የሚከናወን
+    if update.message.photo:
+        photo_file = update.message.photo[-1].file_id
+        
+        approval_kb = [
+            [InlineKeyboardButton("✅ Approve (አጽድቅ)", callback_data=f"approve|{user.id}"),
+             InlineKeyboardButton("❌ Dismiss (ውድቅ አድርግ)", callback_data=f"dismiss|{user.id}")]
+        ]
+        await context.bot.send_photo(
+            chat_id=ADMIN_ID,
+            photo=photo_file,
+            caption=f"🚨 **አዲስ የክፍያ ስክሪንሾት መጣ!**\n\n👤 ስም: {user.full_name}\n🆔 ID: `{user.id}`\nዩዘርናም: @{user.username or 'None'}",
+            reply_markup=InlineKeyboardMarkup(approval_kb),
+            parse_mode="Markdown"
+        )
+        await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል። አድሚኑ ሲያረጋግጠው ፕሪሚየም አካውንትዎ በቅርቡ ይከፈታል!", protect_content=True)
+        return
+
+    text = update.message.text
+    if not text:
+        return
+
+    # 2. አድሚን ብሮድካስት ሲልክ
     if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
         target_group = user_quiz_sessions.pop("broadcasting_target", "all")
         user_quiz_sessions["broadcasting_mode"].remove(user.id)
@@ -239,11 +262,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"✅ ብሮድካስቱ በተሳካ ሁኔታ ለ **{success_count}** ተጠቃሚዎች ተልኳል!")
         return
 
+    # 3. ተጠቃሚው ስሙን እና ስትሪሙን ሲጽፍ
     if user.id in user_quiz_sessions.get("awaiting_name_stream", set()):
         user_quiz_sessions["awaiting_name_stream"].remove(user.id)
         user_quiz_sessions.setdefault("awaiting_payment_approval", set()).add(user.id)
         
         bank_text = (
+            f"እሺ **{text}**\n\n"
             "መልካም! ፕሪሚየም ለመሆን ተቃርበዋል 🎉\n\n"
             "በሚከተሉት የባንክ አካውንት አማራጮች **300 ብር** ብቻ በመክፈል ሙሉ ዓመቱን ከኛ ጋር ፕሪሚየም ሆነው መማር ይችላሉ፦\n\n"
             "🏦 **CBE:** `1000667301673`\n"
@@ -253,26 +278,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.message.reply_text(bank_text, parse_mode="Markdown", protect_content=True)
         return
-
-    if update.message.photo:
-        if user.id in user_quiz_sessions.get("awaiting_payment_approval", set()):
-            photo_file = update.message.photo[-1].file_id
-            
-            approval_kb = [
-                [InlineKeyboardButton("✅ Approve (አጽድቅ)", callback_data=f"approve|{user.id}"),
-                 InlineKeyboardButton("❌ Dismiss (ውድቅ አድርግ)", callback_data=f"dismiss|{user.id}")]
-            ]
-            await context.bot.send_photo(
-                chat_id=ADMIN_ID,
-                photo=photo_file,
-                caption=f"🚨 **አዲስ የክፍያ ስክሪንሾት መጣ!**\n\n👤 ስም: {user.full_name}\n🆔 ID: `{user.id}`\nዩዘርናም: @{user.username}",
-                reply_markup=InlineKeyboardMarkup(approval_kb),
-                parse_mode="Markdown"
-            )
-            await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል። አድሚኑ ሲያረጋግጠው ፕሪሚየም አካውንትዎ በቅርቡ ይከፈታል!", protect_content=True)
-            return
-
-    text = update.message.text
 
     if text == "📝 Model Exam":
         keyboard = [
