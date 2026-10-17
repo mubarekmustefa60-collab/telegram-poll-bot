@@ -26,8 +26,8 @@ def load_questions():
 
 user_quiz_sessions = {}
 user_bot_stats = {"total_users": set(), "users_list": {}}
-free_users = set() # ነፃ ተጠቃሚዎች
-premium_users = set() # ፕሪሚየም ተጠቃሚዎች
+free_users = set()
+premium_users = set()
 leaderboard_data = []
 ADMIN_ID = 6183608197
 
@@ -105,7 +105,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     
     if user.id == ADMIN_ID:
-        keyboard.append([KeyboardButton("⚙️ Admin Control")])
+        keyboard.append([KeyboardButton("Admin Control")])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -252,7 +252,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "👨‍💻 Contact Admin":
         await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown", protect_content=True)
 
-    elif text == "⚙️ Admin Control" and user.id == ADMIN_ID:
+    elif text == "Admin Control" and user.id == ADMIN_ID:
         total_count = len(user_bot_stats["total_users"])
         active_list = "\n".join([f"• {name}" for uid, name in user_bot_stats["users_list"].items()])
         admin_kb = [
