@@ -83,10 +83,12 @@ def parse_question_data(q):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
-    user_bot_stats["total_users"].add(user.id)
-    user_bot_stats["users_list"][user.id] = f"{user.full_name} (@{user.username})"
     
-    if user.id not in premium_users:
+    # ተጠቃሚውን መመዝገብ
+    user_bot_stats["total_users"].add(user.id)
+    user_bot_stats["users_list"][user.id] = f"{user.full_name} (@{user.username or 'No Username'})"
+    
+    if user.id != ADMIN_ID and user.id not in premium_users:
         free_users.add(user.id)
 
     if chat.type in ["group", "supergroup"]:
@@ -105,7 +107,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     
     if user.id == ADMIN_ID:
-        keyboard.append([KeyboardButton("Admin Control")])
+        keyboard.append([KeyboardButton("⚙️ Admin Control")])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -133,6 +135,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_bot_stats["total_users"].add(user.id)
+    if user.id != ADMIN_ID and user.id not in premium_users:
+        free_users.add(user.id)
+    
+    if user.id not in user_bot_stats["users_list"]:
+        user_bot_stats["users_list"][user.id] = f"{user.full_name} (@{user.username or 'No Username'})"
     
     # አድሚን ብሮድካስት እንዲልክ መልዕክት ሲጠብቅ
     if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
@@ -252,9 +259,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "👨‍💻 Contact Admin":
         await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown", protect_content=True)
 
-    elif text == "Admin Control" and user.id == ADMIN_ID:
+    elif text == "⚙️ Admin Control" and user.id == ADMIN_ID:
         total_count = len(user_bot_stats["total_users"])
-        active_list = "\n".join([f"• {name}" for uid, name in user_bot_stats["users_list"].items()])
+        active_list = "\n".join([f"• {name}" for uid, name in user_bot_stats["users_list"].items()]) or "ምንም ተጠቃሚ የለም"
         admin_kb = [
             [InlineKeyboardButton("📢 Broadcast to Premium", callback_data="bc_premium"),
              InlineKeyboardButton("📢 Broadcast to Free", callback_data="bc_free")]
@@ -318,7 +325,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="🎉 **እንኳን ደስ አለዎት!** ክፍያዎ በአድሚን ጸድቋል። አሁን ሁሉም ፕሪሚየም አዝራሮች እና Private Tutorial Class ተከፍተውልዎታል!",
                 protect_content=True
             )
-            await query.message.edit_caption(caption=query.message.caption + "\n\n✅ **Status: APPROVED (ጸድቋል)**")
+            try:
+                await query.message.edit_caption(caption=query.message.caption + "\n\n✅ **Status: APPROVED (ጸድቋል)**")
+            except Exception:
+                pass
         else:
             if target_id in user_quiz_sessions.get("awaiting_payment_approval", set()):
                 user_quiz_sessions["awaiting_payment_approval"].remove(target_id)
@@ -328,7 +338,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="❌ ይቅርታ፣ የክፍያ ስክሪንሾትዎ ውድቅ ተደርጓል። እባክዎ አድሚኑን ያነጋግሩ @rmedial_matrix_support",
                 protect_content=True
             )
-            await query.message.edit_caption(caption=query.message.caption + "\n\n❌ **Status: DISMISSED (ውድቅ ሆኗል)**")
+            try:
+                await query.message.edit_caption(caption=query.message.caption + "\n\n❌ **Status: DISMISSED (ውድቅ ሆኗል)**")
+            except Exception:
+                pass
         return
 
     elif data == "back_to_main":
