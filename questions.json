@@ -1,1 +1,260 @@
+{
+  "model_2017_biology": {
+    "question": "የ 2017 Model Exam - Biology ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2017_chemistry": {
+    "question": "የ 2017 Model Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2017_english": {
+    "question": "የ 2017 Model Exam - English ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2017_history": {
+    "question": "የ 2017 Model Exam - History ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2017_math": {
+    "question": "የ 2017 Model Exam - Maths ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2017_geography": {
+    "question": "የ 2017 Model Exam - Geography ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2017_physics": {
+    "question": "የ 2017 Model Exam - Physics ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+
+  "model_2018_biology": {
+    "question": "የ 2018 Model Exam - Biology ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2018_chemistry": {
+    "question": "የ 2018 Model Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2018_english": {
+    "question": "የ 2018 Model Exam - English ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2018_history": {
+    "question": "የ 2018 Model Exam - History ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2018_math": {
+    "question": "የ 2018 Model Exam - Maths ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2018_geography": {
+    "question": "የ 2018 Model Exam - Geography ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "model_2018_physics": {
+    "question": "የ 2018 Model Exam - Physics ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+
+  "remedial_2015_biology": {
+    "question": "የ 2015 Remedial National Exam - Biology ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2015_chemistry": {
+    "question": "የ 2015 Remedial National Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2015_english": {
+    "question": "የ 2015 Remedial National Exam - English ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2015_history": {
+    "question": "የ 2015 Remedial National Exam - History ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2015_math": {
+    "question": "የ 2015 Remedial National Exam - Maths ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2015_geography": {
+    "question": "የ 2015 Remedial National Exam - Geography ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2015_physics": {
+    "question": "የ 2015 Remedial National Exam - Physics ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+
+  "remedial_2016_biology": {
+    "question": "የ 2016 Remedial National Exam - Biology ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2016_chemistry": {
+    "question": "የ 2016 Remedial National Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2016_english": {
+    "question": "የ 2016 Remedial National Exam - English ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2016_history": {
+    "question": "የ 2016 Remedial National Exam - History ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2016_math": {
+    "question": "የ 2016 Remedial National Exam - Maths ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2016_geography": {
+    "question": "የ 2016 Remedial National Exam - Geography ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2016_physics": {
+    "question": "የ 2016 Remedial National Exam - Physics ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+
+  "remedial_2017_biology": {
+    "question": "የ 2017 Remedial National Exam - Biology ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2017_chemistry": {
+    "question": "የ 2017 Remedial National Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2017_english": {
+    "question": "የ 2017 Remedial National Exam - English ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2017_history": {
+    "question": "የ 2017 Remedial National Exam - History ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2017_math": {
+    "question": "የ 2017 Remedial National Exam - Maths ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2017_geography": {
+    "question": "የ 2017 Remedial National Exam - Geography ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2017_physics": {
+    "question": "የ 2017 Remedial National Exam - Physics ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+
+  "remedial_2018_biology": {
+    "question": "የ 2018 Remedial National Exam - Biology ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2018_chemistry": {
+    "question": "የ 2018 Remedial National Exam - Chemistry ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2018_english": {
+    "question": "የ 2018 Remedial National Exam - English ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2018_history": {
+    "question": "የ 2018 Remedial National Exam - History ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2018_math": {
+    "question": "የ 2018 Remedial National Exam - Maths ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2018_geography": {
+    "question": "የ 2018 Remedial National Exam - Geography ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  },
+  "remedial_2018_physics": {
+    "question": "የ 2018 Remedial National Exam - Physics ጥያቄ እዚህ ይጻፍ...",
+    "options": ["ሀ", "ለ", "ሐ", "መ"],
+    "correct": 0,
+    "explanation": "ማብራሪያ..."
+  }
+}
 
