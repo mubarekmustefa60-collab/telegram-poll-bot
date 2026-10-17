@@ -1200,17 +1200,7 @@
         {"question": "37. All of the following are true except:", "options": ["Most countries of the world have a free market economy", "Traditional economic system is generally less productive", "The world trade organization is dominated by industrialized countries", "Less developed countries benefit more from globalization"], "correct_option_id": 3, "explanation": "Less developed countries do not benefit more from globalization; this statement is false."},
         {"question": "38. All are the challenges to Ethiopia's socio-economic development except:", "options": ["Diversified climate", "Low education quality", "Low level of infrastructure", "Rapid population growth"], "correct_option_id": 0, "explanation": "A diversified climate is an asset, not a challenge to development."},
         {"question": "39. There is high fertility rate in Ethiopia due to all except:", "options": ["Late marriage, particularly of females", "Low levels of family planning practices", "Perception of high social and economic value of children", "Relatively high infant and child mortality rates"], "correct_option_id": 0, "explanation": "Late marriage reduces fertility rate; it does not contribute to high fertility."},
-        {"question": "40. Which one of the following is a push factor of rural to urban migration in Ethiopia?", "options": ["Employment opportunity", "Good welfare service", "Better living standard", "Shortage of farm land"], "correct_option_id": 3, "explanation": "Shortage of farm land is a push factor for rural to urban migration."},
-        {"question": "41. Which one of the following is an old fold mountain?", "options": ["Cape range", "Rockies", "Atlas", "Himalayas"], "correct_option_id": 0, "explanation": "The Cape Range is an old fold mountain."},
-        {"question": "42. The layer of the earth that consists of melted Iron and Nickel is", "options": ["Inner core", "Mantle", "Crust", "Outer core"], "correct_option_id": 3, "explanation": "The outer core consists of melted iron and nickel."},
-        {"question": "43. Which one of the following countries lies in the great African Rift Valley region?", "options": ["Chad", "Sudan", "Somalia", "Kenya"], "correct_option_id": 3, "explanation": "Kenya lies in the Great African Rift Valley region."},
-        {"question": "44. The deepest lake in Ethiopia is", "options": ["Tana", "Abaya", "Shalla", "Ziway"], "correct_option_id": 2, "explanation": "Lake Shalla is the deepest lake in Ethiopia."},
-        {"question": "45. Moisture-bearing wind responsible for autumn and spring rainfall in Ethiopia is", "options": ["Polar easterlies", "North-easterlies", "Equatorial Westerlies", "South-easterlies"], "correct_option_id": 3, "explanation": "South-easterlies are responsible for autumn and spring rainfall in Ethiopia."},
-        {"question": "46. The region of Ethiopia with relatively large concentration of urban population is", "options": ["Shawan and the Harerghe plateau", "Shawan and the Tigrean plateau", "Shewan and Gojjam highlands", "Shewan and the southeastern lowlands"], "correct_option_id": 0, "explanation": "Shawan and the Harerghe plateau have a large concentration of urban population."},
-        {"question": "47. When is the sun overhead at the Tropic of Cancer?", "options": ["March 21", "December 21", "September 22", "June 21"], "correct_option_id": 3, "explanation": "The sun is overhead at the Tropic of Cancer on June 21."},
-        {"question": "48. If a person drives from Ethiopia to Canada, which type of migration is it?", "options": ["Immigration", "Emigration", "Intra-continental migration", "Inter-continental migration"], "correct_option_id": 3, "explanation": "Moving from one continent to another is inter-continental migration."},
-        {"question": "49. The high rate of urbanization in Ethiopia is mainly attributed to", "options": ["High rate of natural increase of population", "High rural to urban migration", "Low standard of living in rural area", "Better standard of living in urban areas"], "correct_option_id": 1, "explanation": "High rural to urban migration is the main cause of rapid urbanization in Ethiopia."},
-        {"question": "50. Which country of Africa is the leading producer of Bauxite?", "options": ["Gabon", "Ghana", "Guinea", "Gambia"], "correct_option_id": 2, "explanation": "Guinea is the leading producer of bauxite in Africa."}
+        {"question": "40. Which one of the following is a push factor of rural to urban migration in Ethiopia?", "options": ["Employment opportunity", "Good welfare service", "Better living standard", "Shortage of farm land"], "correct_option_id": 3, "explanation": "Shortage of farm land is a push factor for rural to urban migration."}
       ]
     },
     "2016": {
@@ -1578,9 +1568,7 @@
         {"question": "49. What is the main source of air pollution in Addis Ababa?", "options": ["Vehicles", "Factories", "Burning waste", "All of the above"], "correct_option_id": 3, "explanation": "All of the above."},
         {"question": "50. What is the main source of water pollution in Ethiopia?", "options": ["Industrial waste", "Sewage", "Agricultural runoff", "All of the above"], "correct_option_id": 3, "explanation": "All of the above."}
       ]
-    }
-  },
-  "remedial_exams": {
+    },
     "2017": {
       "Biology": [
         {"question": "1. At the end of a research process the,", "options": ["hypothesis is necessarily accepted", "hypothesis may be accepted or rejected", "experiment needs to be repeated", "the research question needs to be revised"], "correct_option_id": 1, "explanation": "የጥናት ሂደት ሲጠናቀቅ የተደረሰበት ውጤት መላምት ትክክል መሆኑን ሊያረጋግጥ ወይም ሊያስተባብለው ይችላል."},
@@ -1931,18 +1919,17 @@
         {"question": "37. All of the following are true except:", "options": ["Most countries of the world have a free market economy", "Traditional economic system is generally less productive", "The world trade organization is dominated by industrialized countries", "Less developed countries benefit more from globalization"], "correct_option_id": 3, "explanation": "Less developed countries do not benefit more from globalization; this statement is false."},
         {"question": "38. All are the challenges to Ethiopia's socio-economic development except:", "options": ["Diversified climate", "Low education quality", "Low level of infrastructure", "Rapid population growth"], "correct_option_id": 0, "explanation": "A diversified climate is an asset, not a challenge to development."},
         {"question": "39. There is high fertility rate in Ethiopia due to all except:", "options": ["Late marriage, particularly of females", "Low levels of family planning practices", "Perception of high social and economic value of children", "Relatively high infant and child mortality rates"], "correct_option_id": 0, "explanation": "Late marriage reduces fertility rate; it does not contribute to high fertility."},
-        {"question": "40. Which one of the following is a push factor of rural to urban migration in Ethiopia?", "options": ["Employment opportunity", "Good welfare service", "Better living standard", "Shortage of farm land"], "correct_option_id": 3, "explanation": "Shortage of farm land is a push factor for rural to urban migration."},
-        {"question": "41. Which one of the following is an old fold mountain?", "options": ["Cape range", "Rockies", "Atlas", "Himalayas"], "correct_option_id": 0, "explanation": "The Cape Range is an old fold mountain."},
-        {"question": "42. The layer of the earth that consists of melted Iron and Nickel is", "options": ["Inner core", "Mantle", "Crust", "Outer core"], "correct_option_id": 3, "explanation": "The outer core consists of melted iron and nickel."},
-        {"question": "43. Which one of the following countries lies in the great African Rift Valley region?", "options": ["Chad", "Sudan", "Somalia", "Kenya"], "correct_option_id": 3, "explanation": "Kenya lies in the Great African Rift Valley region."},
-        {"question": "44. The deepest lake in Ethiopia is", "options": ["Tana", "Abaya", "Shalla", "Ziway"], "correct_option_id": 2, "explanation": "Lake Shalla is the deepest lake in Ethiopia."},
-        {"question": "45. Moisture-bearing wind responsible for autumn and spring rainfall in Ethiopia is", "options": ["Polar easterlies", "North-easterlies", "Equatorial Westerlies", "South-easterlies"], "correct_option_id": 3, "explanation": "South-easterlies are responsible for autumn and spring rainfall in Ethiopia."},
-        {"question": "46. The region of Ethiopia with relatively large concentration of urban population is", "options": ["Shawan and the Harerghe plateau", "Shawan and the Tigrean plateau", "Shewan and Gojjam highlands", "Shewan and the southeastern lowlands"], "correct_option_id": 0, "explanation": "Shawan and the Harerghe plateau have a large concentration of urban population."},
-        {"question": "47. When is the sun overhead at the Tropic of Cancer?", "options": ["March 21", "December 21", "September 22", "June 21"], "correct_option_id": 3, "explanation": "The sun is overhead at the Tropic of Cancer on June 21."},
-        {"question": "48. If a person drives from Ethiopia to Canada, which type of migration is it?", "options": ["Immigration", "Emigration", "Intra-continental migration", "Inter-continental migration"], "correct_option_id": 3, "explanation": "Moving from one continent to another is inter-continental migration."},
-        {"question": "49. The high rate of urbanization in Ethiopia is mainly attributed to", "options": ["High rate of natural increase of population", "High rural to urban migration", "Low standard of living in rural area", "Better standard of living in urban areas"], "correct_option_id": 1, "explanation": "High rural to urban migration is the main cause of rapid urbanization in Ethiopia."},
-        {"question": "50. Which country of Africa is the leading producer of Bauxite?", "options": ["Gabon", "Ghana", "Guinea", "Gambia"], "correct_option_id": 2, "explanation": "Guinea is the leading producer of bauxite in Africa."}
+        {"question": "40. Which one of the following is a push factor of rural to urban migration in Ethiopia?", "options": ["Employment opportunity", "Good welfare service", "Better living standard", "Shortage of farm land"], "correct_option_id": 3, "explanation": "Shortage of farm land is a push factor for rural to urban migration."}
       ]
+    },
+    "2018": {
+      "Biology": [],
+      "Chemistry": [],
+      "Physics": [],
+      "Maths": [],
+      "English": [],
+      "History": [],
+      "Geography": []
     }
   }
 }
