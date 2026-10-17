@@ -21,6 +21,7 @@ def home():
 
 # ─── DATABASE SETUP (SQLite) ───
 DB_FILE = "bot_database.db"
+TUTORIAL_GROUP_ID = -1003196904052  # የሰጡን ግሩፕ መታወቂያ
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
@@ -171,11 +172,23 @@ def parse_question_data(q):
     explanation = q.get("explanation", "")
     return q_text, options_list, correct_id, explanation
 
+# ተጠቃሚው ግሩፑ ውስጥ አባል መሆኑን የሚረጋገጥበት ፈተና
+async def check_and_update_membership(user_id, context):
+    try:
+        member = await context.bot.get_chat_member(chat_id=TUTORIAL_GROUP_ID, user_id=user_id)
+        if member.status in ["member", "administrator", "creator"]:
+            db_set_premium(user_id, 1)
+            return True
+    except Exception as e:
+        logging.error(f"Membership check error: {e}")
+    return False
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
     
     db_add_user(user.id, user.full_name, user.username)
+    await check_and_update_membership(user.id, context)
 
     if chat.type in ["group", "supergroup"]:
         await update.message.reply_text(
@@ -221,8 +234,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     db_add_user(user.id, user.full_name, user.username)
+    await check_and_update_membership(user.id, context)
     
-    # አድሚን ብሮድካስት እንዲልክ መልዕክት ሲጠብቅ
     if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
         target_group = user_quiz_sessions.pop("broadcasting_target", "all")
         user_quiz_sessions["broadcasting_mode"].remove(user.id)
@@ -240,7 +253,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"✅ ብሮድካስቱ በተሳካ ሁኔታ ለ **{success_count}** ተጠቃሚዎች ተልኳል!")
         return
 
-    # ተጠቃሚው ስክሪንሾት (ፎቶ) ሲልክ - ያለ ምንም ቅድመ ሁኔታ በቀጥታ ወደ አድሚን እንዲደርስ ማድረግ
     if update.message.photo:
         photo_file = update.message.photo[-1].file_id
         
@@ -282,15 +294,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
         else:
             keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ፕሪሚየም ሲሆኑ ሁሉንም ጥያቄዎች እና ቱቶሪያሎች ማግኘት ይችላሉ።"
+            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። የቱቶሪያል ግሩፓችን አባል በመሆን ፕሪሚየም መሆን ይችላሉ!"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text in ["📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
-        if db_is_premium(user.id):
+        # እዚህ ጋር ሲጫኑ ግሩፑ ውስጥ መሆናቸውን በድጋሚ እንፈትሻለን
+        is_member = await check_and_update_membership(user.id, context)
+        if is_member or db_is_premium(user.id):
             await update.message.reply_text("🎓📚 **የፕሪሚየም ትምህርት ማዕከል ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
         else:
             keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ፕሪሚየም በመሆን Private Tutorial Class ይክፈቱ!"
+            msg = f"ሰላም {user.full_name}\nእስካሁን የፕሪሚየም ግሩፓችን አባል አይደሉም። እባክዎ በመጀመሪያ 300 ብር በመክፈል ወይም ግሩፓችንን በመቀላቀል VIP ይሁኑ!"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text == "💎 VIP / ፕሪሚየም ለመሆን":
@@ -300,7 +314,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🏦 **CBE:** `1000667301673`\n"
             "📱 **TELEBIRR:** `0929698365`\n"
             "📱 **CBE BIRR:** `0929698365`\n\n"
-            "💵 ከላይ ባሉት አማራጮች 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ! ስላኩት በሰከንዶች ውስጥ አድሚኑ ያረጋግጥልዎታል።"
+            "💵 ከላይ ባሉት አማራጮች 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ!"
         )
         await update.message.reply_text(vip_text, parse_mode="Markdown", protect_content=True)
 
