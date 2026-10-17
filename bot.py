@@ -23,6 +23,25 @@ def load_questions():
             return json.load(f)
     return {}
 
+# ጥያቄዎችን ከአዲሱም ሆነ ከቆየው የ JSON አወቃቀር ፈልጎ የሚያመጣ ተግባር
+def get_exam_questions(data, category, year, subject):
+    # 1. አዲሱን አወቃቀር መፈተሽ (model_exams / remedial_exams -> year -> Subject)
+    cat_key = "model_exams" if category == "model" else "remedial_exams"
+    if cat_key in data and year in data[cat_key]:
+        year_data = data[cat_key][year]
+        for k, v in year_data.items():
+            if k.lower() == subject.lower():
+                return v
+            if subject.lower() in ["math", "maths", "mathematics"] and k.lower() in ["math", "maths", "mathematics"]:
+                return v
+
+    # 2. የቆየውን አወቃቀር መፈተሽ (ለምሳሌ model_2017_biology)
+    flat_key = f"{category}_{year}_{subject.lower()}"
+    if flat_key in data:
+        return data[flat_key]
+    
+    return []
+
 # 1. /start ሲሉ የሚመጣው መደበኛ (Normal) ምናሌ
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -61,7 +80,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("📌 **Remedial National Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
     elif text == "🎯 Exam Trainer Quiz":
-        await update.message.reply_text("🎯 **Exam Trainer Quiz** በቅርቡ ይለቀቃል! ይጠብቁን።", parse_mode="Markdown")
+        data = load_questions()
+        quizzes = data.get("quizzes", [])
+        if not quizzes:
+            await update.message.reply_text("🎯 **Exam Trainer Quiz** በቅርቡ ይለቀቃል! ይጠብቁን።", parse_mode="Markdown")
+        else:
+            # በ quizzes ውስጥ ጥያቄ ካለ የመጀመሪያውን ይልካል
+            kb = [[InlineKeyboardButton("🚀 ጥያቄዎችን ጀምር", callback_data="q|quiz|all|all|0")]]
+            await update.message.reply_text("🎯 **Exam Trainer Quiz** ለመጀመር ከታች ያለውን ቁልፍ ይጫኑ:", reply_markup=InlineKeyboardMarkup(kb), parse_mode="Markdown")
 
 # 3. የ Inline ቁልፎች እና የጥያቄዎች መላኪያ
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -97,13 +123,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data in ["model_year_2017", "model_year_2018"]:
         year = data.split("_")[2]
         keyboard = [
-            [InlineKeyboardButton("🧬 Biology", callback_data=f"q|model_{year}_biology|0"),
-             InlineKeyboardButton("🧪 Chemistry", callback_data=f"q|model_{year}_chemistry|0")],
-            [InlineKeyboardButton("📚 English", callback_data=f"q|model_{year}_english|0"),
-             InlineKeyboardButton("📜 History", callback_data=f"q|model_{year}_history|0")],
-            [InlineKeyboardButton("📐 Maths", callback_data=f"q|model_{year}_math|0"),
-             InlineKeyboardButton("🌍 Geography", callback_data=f"q|model_{year}_geography|0")],
-            [InlineKeyboardButton("⚡ Physics", callback_data=f"q|model_{year}_physics|0")],
+            [InlineKeyboardButton("🧬 Biology", callback_data=f"q|model|{year}|Biology|0"),
+             InlineKeyboardButton("🧪 Chemistry", callback_data=f"q|model|{year}|Chemistry|0")],
+            [InlineKeyboardButton("📚 English", callback_data=f"q|model|{year}|English|0"),
+             InlineKeyboardButton("📜 History", callback_data=f"q|model|{year}|History|0")],
+            [InlineKeyboardButton("📐 Maths", callback_data=f"q|model|{year}|Maths|0"),
+             InlineKeyboardButton("🌍 Geography", callback_data=f"q|model|{year}|Geography|0")],
+            [InlineKeyboardButton("⚡ Physics", callback_data=f"q|model|{year}|Physics|0")],
             [InlineKeyboardButton("⬅️ ተመለስ", callback_data="back_to_model")]
         ]
         await query.edit_message_text(f"📌 **{year} Model Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
@@ -112,13 +138,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data in ["rem_year_2015", "rem_year_2016", "rem_year_2017", "rem_year_2018"]:
         year = data.split("_")[2]
         keyboard = [
-            [InlineKeyboardButton("🧬 Biology", callback_data=f"q|remedial_{year}_biology|0"),
-             InlineKeyboardButton("🧪 Chemistry", callback_data=f"q|remedial_{year}_chemistry|0")],
-            [InlineKeyboardButton("📚 English", callback_data=f"q|remedial_{year}_english|0"),
-             InlineKeyboardButton("📜 History", callback_data=f"q|remedial_{year}_history|0")],
-            [InlineKeyboardButton("📐 Maths", callback_data=f"q|remedial_{year}_math|0"),
-             InlineKeyboardButton("🌍 Geography", callback_data=f"q|remedial_{year}_geography|0")],
-            [InlineKeyboardButton("⚡ Physics", callback_data=f"q|remedial_{year}_physics|0")],
+            [InlineKeyboardButton("🧬 Biology", callback_data=f"q|remedial|{year}|Biology|0"),
+             InlineKeyboardButton("🧪 Chemistry", callback_data=f"q|remedial|{year}|Chemistry|0")],
+            [InlineKeyboardButton("📚 English", callback_data=f"q|remedial|{year}|English|0"),
+             InlineKeyboardButton("📜 History", callback_data=f"q|remedial|{year}|History|0")],
+            [InlineKeyboardButton("📐 Maths", callback_data=f"q|remedial|{year}|Maths|0"),
+             InlineKeyboardButton("🌍 Geography", callback_data=f"q|remedial|{year}|Geography|0")],
+            [InlineKeyboardButton("⚡ Physics", callback_data=f"q|remedial|{year}|Physics|0")],
             [InlineKeyboardButton("⬅️ ተመለስ", callback_data="back_to_remedial")]
         ]
         await query.edit_message_text(f"📌 **{year} Remedial National Exam** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
@@ -127,17 +153,22 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 4. ጥያቄዎችን ተራ በተራ መላክ (Pagination)
     if data.startswith("q|"):
         parts = data.split("|")
-        exam_key = parts[1]
-        index = int(parts[2])
+        category = parts[1]
+        year = parts[2]
+        subject = parts[3]
+        index = int(parts[4])
 
         questions_data = load_questions()
-        exam_questions = questions_data.get(exam_key)
+        
+        if category == "quiz":
+            exam_questions = questions_data.get("quizzes", [])
+        else:
+            exam_questions = get_exam_questions(questions_data, category, year, subject)
 
         if not exam_questions:
-            await query.message.reply_text("⚠️ የዚህ ትምህርት ጥያቄዎች ገና አልተሞሉም!")
+            await query.message.reply_text(f"⚠️ የ {year} {subject} ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!")
             return
 
-        # ፋይሉ ላይ አንድ ጥያቄ ብቻ በነጠላ ከተቀመጠ ወደ List መቀየር
         if isinstance(exam_questions, dict):
             exam_questions = [exam_questions]
 
@@ -145,20 +176,31 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             q = exam_questions[index]
             total = len(exam_questions)
             
+            # የቴሌግራም Poll ገደቦችን መጠበቅ (Question max 300, Option max 100, Explanation max 200)
+            q_text = f"[{index + 1}/{total}] {q['question']}"
+            if len(q_text) > 300:
+                q_text = q_text[:297] + "..."
+                
+            options = [str(opt)[:100] for opt in q["options"]]
+            correct_id = q.get("correct_option_id", q.get("correct", 0))
+            explanation = q.get("explanation", "")
+            if explanation and len(explanation) > 200:
+                explanation = explanation[:197] + "..."
+
             # Poll መላክ
             await context.bot.send_poll(
                 chat_id=query.message.chat_id,
-                question=f"[{index + 1}/{total}] {q['question']}",
-                options=q["options"],
+                question=q_text,
+                options=options,
                 is_anonymous=False,
                 type="quiz",
-                correct_option_id=q["correct"],
-                explanation=q.get("explanation", "")
+                correct_option_id=correct_id,
+                explanation=explanation if explanation else None
             )
 
             # ቀጣይ ጥያቄ ካለ "ቀጣይ ጥያቄ ➡️" የሚል በተን ማምጣት
             if index + 1 < total:
-                next_kb = [[InlineKeyboardButton(f"ቀጣይ ጥያቄ ({index + 2}/{total}) ➡️", callback_data=f"q|{exam_key}|{index + 1}")]]
+                next_kb = [[InlineKeyboardButton(f"ቀጣይ ጥያቄ ({index + 2}/{total}) ➡️", callback_data=f"q|{category}|{year}|{subject}|{index + 1}")]]
                 await context.bot.send_message(
                     chat_id=query.message.chat_id,
                     text="ለመቀጠል ከታች ያለውን ቁልፍ ይጫኑ 👇",
@@ -167,7 +209,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await context.bot.send_message(
                     chat_id=query.message.chat_id,
-                    text="🎉 **የዚህን ምድብ ጥያቄዎች በሙሉ ጨርሰዋል!** ሌላ ትምህርት ለመምረጥ ከታች ያሉትን ዋና ቁልፎች ይጠቀሙ።",
+                    text=f"🎉 **የ {year} {subject} ጥያቄዎችን በሙሉ ጨርሰዋል!** ሌላ ትምህርት ለመምረጥ ከታች ያሉትን ዋና ቁልፎች ይጠቀሙ።",
                     parse_mode="Markdown"
                 )
 
