@@ -240,7 +240,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"✅ ብሮድካስቱ በተሳካ ሁኔታ ለ **{success_count}** ተጠቃሚዎች ተልኳል!")
         return
 
-    # ተጠቃሚው ስክሪንሾት (ፎቶ) ከላከ - በቀጥታ ወደ አድሚን እንዲደርስ ማድረግ
+    # ተጠቃሚው ስክሪንሾት (ፎቶ) ሲልክ - ያለ ምንም ቅድመ ሁኔታ በቀጥታ ወደ አድሚን እንዲደርስ ማድረግ
     if update.message.photo:
         photo_file = update.message.photo[-1].file_id
         
@@ -255,7 +255,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(approval_kb),
             parse_mode="Markdown"
         )
-        await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል! አድሚኑ ክፍያዎን አረጋግጦ ፕሪሚየም አካውንትዎን በቅርቡ ይከፍታል።", protect_content=True)
+        await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል! አድሚኑ ክፍያዎን አረጋግጦ ፕሪሚየም አካውንትዎን በሰከንዶች ውስጥ ይከፍታል።", protect_content=True)
         return
 
     text = update.message.text
