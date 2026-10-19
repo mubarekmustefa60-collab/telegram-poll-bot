@@ -397,7 +397,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         ref_kb = [[InlineKeyboardButton("📋 ሊንኩን ኮፒ አድርግ (Copy Link)", callback_data=f"copy_ref|{ref_link}")]]
-        # ሪፈራል ሊንክ ኮፒ እንዲደረግ የይዘት ጥበቃን እናጠፋዋለን (protect_content=False)
+        # ለሪፈራል ሊንክ ብቻ protect_content=False እንዲሆን ይደረጋል
         await update.message.reply_text(ref_text, reply_markup=InlineKeyboardMarkup(ref_kb), parse_mode="Markdown", protect_content=False)
         return
 
@@ -452,7 +452,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data.startswith("copy_ref|"):
         link_to_copy = data.split("|")[1]
-        await query.answer(text=f"ሊንኩ ተይዟል: {link_to_copy}", show_alert=True)
+        await query.answer(text=f"ሊንኩ ተኮርጇል (Copied): {link_to_copy}", show_alert=True)
         return
 
     await query.answer()
@@ -670,6 +670,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if explanation and len(explanation) > 200:
                 explanation = explanation[:197] + "..."
 
+            is_prot = False if user.id == ADMIN_ID else True
             await context.bot.send_poll(
                 chat_id=query.message.chat_id,
                 question=q_text,
@@ -677,7 +678,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 is_anonymous=False,
                 type="quiz",
                 correct_option_id=correct_id,
-                explanation=explanation if explanation else None
+                explanation=explanation if explanation else None,
+                protect_content=is_prot
             )
 
             nav_buttons = []
@@ -694,7 +696,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(
                 chat_id=query.message.chat_id,
                 text="ለማስተካከል ወይም ለመቀጠል ከታች ያሉትን ቁልፎች ይጠገቡ 👇",
-                reply_markup=InlineKeyboardMarkup(nav_buttons)
+                reply_markup=InlineKeyboardMarkup(nav_buttons),
+                protect_content=is_prot
             )
 
 async def send_trainer_question(context, chat_id, user_id):
@@ -721,7 +724,8 @@ async def send_trainer_question(context, chat_id, user_id):
         f"❓ *{q_text}*\n\n"
         f"👉 **እባክዎ ከታች ካሉት አማራጮች አንዱን ምርጫ ይምረጡ:**"
     )
-    await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup, parse_mode="Markdown")
+    is_prot = False if chat_id == ADMIN_ID else True
+    await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup, parse_mode="Markdown", protect_content=is_prot)
 
 def main():
     TOKEN = os.getenv("BOT_TOKEN")
