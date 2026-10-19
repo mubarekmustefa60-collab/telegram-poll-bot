@@ -60,10 +60,8 @@ def db_add_user(user_id, full_name, username, referred_by=None):
         cursor.execute("INSERT INTO users (user_id, full_name, username, is_premium, referred_by, referral_count) VALUES (?, ?, ?, 0, ?, 0)", 
                        (user_id, full_name, username, referred_by))
         
-        # ሪፈራል ካለ ለጋባዡ ቁጥር መጨመር
         if referred_by and referred_by != user_id:
             cursor.execute("UPDATE users SET referral_count = referral_count + 1 WHERE user_id = ?", (referred_by,))
-            # 30 ከሞላ በራስ-ሰር VIP ማድረግ
             cursor.execute("SELECT referral_count FROM users WHERE user_id = ?", (referred_by,))
             ref_row = cursor.fetchone()
             if ref_row and ref_row[0] >= 30:
@@ -211,7 +209,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
     
-    # ሪፈራል ኮድ መኖሩን ማረጋገጥ (ለምሳሌ /start 123456789)
     referred_by = None
     if context.args:
         try:
@@ -234,10 +231,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
         [KeyboardButton("📝 Model Exam"), KeyboardButton("🏛 Remedial National Exam 🔒")],
-        [KeyboardButton("🎯 Exam Trainer Quiz"), KeyboardButton("📚 Tutorial PDF+Video 🔒")],
+        [KeyboardButton("🎯 Exam Trainer Quiz"), KeyboardButton("📚 Tutorial PDF & Video / Class 🔒")],
         [KeyboardButton("🔥 የዕለቱ ጥያቄ (Daily Quiz)"), KeyboardButton("👥 ሪፈራል (Invite & VIP)")],
         [KeyboardButton("💎 VIP / ፕሪሚየም ለመሆን"), KeyboardButton("🏆 Leaderboard")],
-        [KeyboardButton("🎓 Go to Tutorial Class 🔒"), KeyboardButton("👨‍💻 Contact Admin")]
+        [KeyboardButton("👨‍💻 Contact Admin")]
     ]
     
     if user.id == ADMIN_ID:
@@ -254,11 +251,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📌 *ማስታወሻ:* በ 🔒 ምልክት የተደረገባቸው አገልግሎቶች ለ **VIP / Premium** ተጠቃሚዎች ብቻ ክፍት ናቸው።"
     )
     
+    is_prot = False if user.id == ADMIN_ID else True
     await update.message.reply_text(
         banner_text,
         reply_markup=reply_markup,
         parse_mode="Markdown",
-        protect_content=True
+        protect_content=is_prot
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -271,6 +269,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db_add_user(user.id, user.full_name, user.username)
     await check_and_update_membership(user.id, context)
     
+    is_prot = False if user.id == ADMIN_ID else True
+
     # 1. ፎቶ (ስክሪንሾት) ሲላክ
     if update.message.photo:
         photo_file = update.message.photo[-1].file_id
@@ -286,7 +286,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(approval_kb),
             parse_mode="Markdown"
         )
-        await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል! አድሚኑ ክፍያዎን አረጋግጦ ፕሪሚየም አካውንትዎን በሰከንዶች ውስጥ ይከፍታል።", protect_content=True)
+        await update.message.reply_text("✅ ስክሪንሾትዎ ለአድሚን ተልኳል! አድሚኑ ክፍያዎን አረጋግጦ ፕሪሚየም አካውንትዎን በሰከንዶች ውስጥ ይከፍታል።", protect_content=is_prot)
         return
 
     text = update.message.text
@@ -317,7 +317,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("📅 2018 Model", callback_data="model_year_2018")],
             [InlineKeyboardButton("❌ ዝጋ", callback_data="close_menu")]
         ]
-        await update.message.reply_text("📌 **Model Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
+        await update.message.reply_text("📌 **Model Exam** - የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=is_prot)
 
     elif text == "🏛 Remedial National Exam 🔒":
         if db_is_premium(user.id):
@@ -328,20 +328,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  InlineKeyboardButton("📅 2018", callback_data="rem_year_2018")],
                 [InlineKeyboardButton("❌ ዝጋ", callback_data="close_menu")]
             ]
-            await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
+            await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=is_prot)
         else:
             keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
             msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ግሩፓችን አባል በመሆን፣ 30 ጓደኞችን በመጋበዝ ወይም 300 ብር በመክፈል ፕሪሚየም መሆን ይችላሉ።"
-            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
+            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=is_prot)
 
-    elif text in ["📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
+    elif text == "📚 Tutorial PDF & Video / Class 🔒":
         is_member = await check_and_update_membership(user.id, context)
         if is_member or db_is_premium(user.id):
-            await update.message.reply_text("🎓📚 **የፕሪሚየም ትምህርት ማዕከል ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
+            await update.message.reply_text("🎓📚 **የፕሪሚየም ትምህርት ማዕከል እና ቪዲዮ/PDF ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=is_prot)
         else:
             keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
             msg = f"ሰላም {user.full_name}\nእስካሁን የፕሪሚየም ግሩፓችን አባል አይደሉም። እባክዎ በመጀመሪያ ግሩፓችንን ይቀላቀሉ ወይም ጓደኞችዎን ይጋብዙ!"
-            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
+            await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=is_prot)
 
     elif text == "💎 VIP / ፕሪሚየም ለመሆን":
         vip_text = (
@@ -355,7 +355,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📱 **CBE BIRR:** `0929698365`\n\n"
             "💵 ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ!"
         )
-        await update.message.reply_text(vip_text, parse_mode="Markdown", protect_content=True)
+        await update.message.reply_text(vip_text, parse_mode="Markdown", protect_content=is_prot)
 
     elif text == "🔥 የዕለቱ ጥያቄ (Daily Quiz)":
         q_data = load_questions()
@@ -364,36 +364,42 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             all_qs.extend(get_all_questions_for_subject(q_data, s))
         
         if not all_qs:
-            await update.message.reply_text("⚠️ የዕለቱ ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!", protect_content=True)
+            await update.message.reply_text("⚠️ የዕለቱ ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!", protect_content=is_prot)
             return
         
-        q = random.choice(all_qs)
-        q_text_raw, options_list, correct_id, explanation_raw = parse_question_data(q)
+        # ቢያንስ 20 ጥያቄዎችን በዘፈቀደ መምረጥ (ጥያቄዎቹ ካነሱ ያሉትን ሁሉ ይወስዳል)
+        random.shuffle(all_qs)
+        selected_daily_qs = all_qs[:min(20, len(all_qs))]
         
-        await context.bot.send_poll(
-            chat_id=update.effective_chat.id,
-            question=f"🔥 [የዕለቱ ፈተና] {q_text_raw}",
-            options=[str(opt)[:100] for opt in options_list],
-            is_anonymous=False,
-            type="quiz",
-            correct_option_id=correct_id,
-            explanation=explanation_raw if explanation_raw else None,
-            protect_content=True
-        )
+        await update.message.reply_text(f"🔥 **የዕለቱ የ 20 ጥያቄዎች ፈተና ተጀምሯል!** 🚀 አጠቃላይ {len(selected_daily_qs)} ጥያቄዎች ተዘጋጅተዋል:", parse_mode="Markdown", protect_content=is_prot)
+        
+        for idx, q in enumerate(selected_daily_qs, 1):
+            q_text_raw, options_list, correct_id, explanation_raw = parse_question_data(q)
+            await context.bot.send_poll(
+                chat_id=update.effective_chat.id,
+                question=f"[{idx}/{len(selected_daily_qs)}] {q_text_raw}",
+                options=[str(opt)[:100] for opt in options_list],
+                is_anonymous=False,
+                type="quiz",
+                correct_option_id=correct_id,
+                explanation=explanation_raw if explanation_raw else None,
+                protect_content=is_prot
+            )
         return
 
     elif text == "👥 ሪፈራል (Invite & VIP)":
         ref_count = db_get_referral_count(user.id)
         ref_link = f"https://t.me/{context.bot.username}?start={user.id}"
         ref_text = (
-            f"👥 **የሪፈራል (Referral) ፕሮግራም** 👥\n\n"
-            f"ጓደኞችዎን ወደ ቦቱ በመጋበዝ ያለ ክፍያ **VIP / Premium** መሆን ይችላሉ!\n"
-            f"📌 **መስፈርት:** 30 ትክክለኛ Remedial ተማሪዎችን መጋበዝ አለብዎት።\n\n"
+            "👥 **የሪፈራል (Referral) ፕሮግራም** 👥\n\n"
+            "ጓደኞችዎን ወደ ቦቱ በመጋበዝ ያለ ክፍያ **VIP / Premium** መሆን ይችላሉ!\n"
+            "📌 **መስፈርት:** 30 ትክክለኛ Remedial ተማሪዎችን መጋበዝ አለብዎት።\n\n"
             f"📊 **እስካሁን የጋበዟቸው ተማሪዎች ብዛት:** `{ref_count} / 30`\n\n"
-            f"🔗 **የእርስዎ ልዩ መጋበዣ ሊንክ (Referral Link):**\n`{ref_link}`\n\n"
-            f"ይህንን ሊንክ ለጓደኞችዎ በማጋራት 30 ተማሪዎችን ሲያመጡ ቦቱ በራስ-ሰር ቪአይፒ ያደርግዎታል!"
+            "🔗 **የእርስዎ ልዩ መጋበዣ ሊንክ (Referral Link):**\n"
+            f"ወደ ታች በመጫን ወይም በመንካት ሊንኩን **Copy** አድርገው ለጓደኞችዎ ይላኩ 👇\n\n"
+            f"`{ref_link}`"
         )
-        await update.message.reply_text(ref_text, parse_mode="Markdown", protect_content=True)
+        await update.message.reply_text(ref_text, parse_mode="Markdown", protect_content=is_prot)
         return
 
     elif text == "🎯 Exam Trainer Quiz":
@@ -407,20 +413,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("⚡ Physics", callback_data="trainer|Physics")],
             [InlineKeyboardButton("❌ ዝጋ", callback_data="close_menu")]
         ]
-        await update.message.reply_text("🎯 **Exam Trainer Quiz** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
+        await update.message.reply_text("🎯 **Exam Trainer Quiz** - የትምህርት አይነት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=is_prot)
 
     elif text == "🏆 Leaderboard":
         lb_list = db_get_leaderboard()
         if not lb_list:
-            await update.message.reply_text("🏆 እስካሁን የተመዘገበ የሊደርቦርድ መረጃ የለም። ፈተናዎችን በመስራት የመጀመሪያው ይሁኑ!", protect_content=True)
+            await update.message.reply_text("🏆 እስካሁን የተመዘገበ የሊደርቦርድ መረጃ የለም። ፈተናዎችን በመስራት የመጀመሪያው ይሁኑ!", protect_content=is_prot)
         else:
             lb_text = "🏆 **Top 10 Students Leaderboard** 🏆\n\n"
             for i, st in enumerate(lb_list, 1):
                 lb_text += f"{i}. {st['name']} - *{st['score']} ነጥብ* ({st['subject']})\n"
-            await update.message.reply_text(lb_text, parse_mode="Markdown", protect_content=True)
+            await update.message.reply_text(lb_text, parse_mode="Markdown", protect_content=is_prot)
 
     elif text == "👨‍💻 Contact Admin":
-        await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown", protect_content=True)
+        await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown", protect_content=is_prot)
 
     elif text == "⚙️ Admin Control" and user.id == ADMIN_ID:
         total_count, prem_count, free_count, _ = db_get_stats()
@@ -437,7 +443,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🆓 ነፃ አባላት: **{free_count}**\n\n"
             f"👇 ተጠቃሚዎችን በፋይል ለማውረድ ወይም ብሮድካስት ለማድረግ ከታች ያሉትን ይጠቀሙ:"
         )
-        await update.message.reply_text(admin_text, reply_markup=InlineKeyboardMarkup(admin_kb), parse_mode="Markdown", protect_content=True)
+        await update.message.reply_text(admin_text, reply_markup=InlineKeyboardMarkup(admin_kb), parse_mode="Markdown")
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -563,7 +569,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         all_subject_qs = get_all_questions_for_subject(q_data, subject)
 
         if not all_subject_qs:
-            await query.message.reply_text(f"⚠️ በ {subject} ትምህርት ስር እስካሁን የተሞላ ጥያቄ አልተገኘም!", protect_content=True)
+            await query.message.reply_text(f"⚠️ በ {subject} ትምህርት ስር እስካሁን የተሞላ ጥያቄ አልተገኘም!")
             return
 
         random.shuffle(all_subject_qs)
@@ -588,7 +594,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         session = user_quiz_sessions.get(user_id)
         if not session:
-            await query.message.reply_text("⚠️ የፈተና ጊዜዎ አልቋል ወይም እንደገና መጀመር አለብዎት።", protect_content=True)
+            await query.message.reply_text("⚠️ የፈተና ጊዜዎ አልቋል ወይም እንደገና መጀመር አለብዎት።")
             return
 
         q_list = session["questions"]
@@ -620,7 +626,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"📊 መቶኛ: **{percentage:.1f}%**\n\n"
                 f"{feedback}"
             )
-            await query.message.reply_text(result_text, parse_mode="Markdown", protect_content=True)
+            await query.message.reply_text(result_text, parse_mode="Markdown")
             
             if user_id in user_quiz_sessions:
                 del user_quiz_sessions[user_id]
@@ -643,7 +649,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     exam_questions = v
 
         if not exam_questions:
-            await query.message.reply_text(f"⚠️ የ {year} {subject} ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!", protect_content=True)
+            await query.message.reply_text(f"⚠️ የ {year} {subject} ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!")
             return
 
         if index < len(exam_questions):
@@ -666,8 +672,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 is_anonymous=False,
                 type="quiz",
                 correct_option_id=correct_id,
-                explanation=explanation if explanation else None,
-                protect_content=True
+                explanation=explanation if explanation else None
             )
 
             nav_buttons = []
@@ -684,8 +689,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(
                 chat_id=query.message.chat_id,
                 text="ለማስተካከል ወይም ለመቀጠል ከታች ያሉትን ቁልፎች ይጠገቡ 👇",
-                reply_markup=InlineKeyboardMarkup(nav_buttons),
-                protect_content=True
+                reply_markup=InlineKeyboardMarkup(nav_buttons)
             )
 
 async def send_trainer_question(context, chat_id, user_id):
@@ -712,7 +716,7 @@ async def send_trainer_question(context, chat_id, user_id):
         f"❓ *{q_text}*\n\n"
         f"👉 **እባክዎ ከታች ካሉት አማራጮች አንዱን ምርጫ ይምረጡ:**"
     )
-    await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup, parse_mode="Markdown", protect_content=True)
+    await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup, parse_mode="Markdown")
 
 def main():
     TOKEN = os.getenv("BOT_TOKEN")
