@@ -194,7 +194,6 @@ def parse_question_data(q):
     explanation = q.get("explanation", "")
     return q_text, options_list, correct_id, explanation
 
-# ግሩፕ አባልነት ቼክ
 async def check_and_update_membership(user_id, context):
     try:
         member = await context.bot.get_chat_member(chat_id=TUTORIAL_GROUP_ID, user_id=user_id)
@@ -271,7 +270,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     is_prot = False if user.id == ADMIN_ID else True
 
-    # 1. ፎቶ (ስክሪንሾት) ሲላክ
     if update.message.photo:
         photo_file = update.message.photo[-1].file_id
         
@@ -293,7 +291,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not text:
         return
 
-    # 2. አድሚን ብሮድካስት ሲልክ
     if user.id == ADMIN_ID and user.id in user_quiz_sessions.get("broadcasting_mode", set()):
         target_group = user_quiz_sessions.pop("broadcasting_target", "all")
         user_quiz_sessions["broadcasting_mode"].remove(user.id)
@@ -367,7 +364,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("⚠️ የዕለቱ ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!", protect_content=is_prot)
             return
         
-        # ቢያንስ 20 ጥያቄዎችን በዘፈቀደ መምረጥ (ጥያቄዎቹ ካነሱ ያሉትን ሁሉ ይወስዳል)
         random.shuffle(all_qs)
         selected_daily_qs = all_qs[:min(20, len(all_qs))]
         
@@ -396,10 +392,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 **መስፈርት:** 30 ትክክለኛ Remedial ተማሪዎችን መጋበዝ አለብዎት።\n\n"
             f"📊 **እስካሁን የጋበዟቸው ተማሪዎች ብዛት:** `{ref_count} / 30`\n\n"
             "🔗 **የእርስዎ ልዩ መጋበዣ ሊንክ (Referral Link):**\n"
-            f"ወደ ታች በመጫን ወይም በመንካት ሊንኩን **Copy** አድርገው ለጓደኞችዎ ይላኩ 👇\n\n"
-            f"`{ref_link}`"
+            f"`{ref_link}`\n\n"
+            "👇 ሊንኩን በቀላሉ ኮፒ ለማድረግ ከታች ያለውን ቁልፍ ይጫኑ!"
         )
-        await update.message.reply_text(ref_text, parse_mode="Markdown", protect_content=is_prot)
+        
+        ref_kb = [[InlineKeyboardButton("📋 ሊንኩን ኮፒ አድርግ (Copy Link)", callback_data=f"copy_ref|{ref_link}")]]
+        # ሪፈራል ሊንክ ኮፒ እንዲደረግ የይዘት ጥበቃን እናጠፋዋለን (protect_content=False)
+        await update.message.reply_text(ref_text, reply_markup=InlineKeyboardMarkup(ref_kb), parse_mode="Markdown", protect_content=False)
         return
 
     elif text == "🎯 Exam Trainer Quiz":
@@ -447,10 +446,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
     
     data = query.data
     user = query.from_user
+
+    if data.startswith("copy_ref|"):
+        link_to_copy = data.split("|")[1]
+        await query.answer(text=f"ሊንኩ ተይዟል: {link_to_copy}", show_alert=True)
+        return
+
+    await query.answer()
 
     if data == "close_menu":
         await query.message.delete()
