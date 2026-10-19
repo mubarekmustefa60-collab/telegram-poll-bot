@@ -32,7 +32,9 @@ def init_db():
             user_id INTEGER PRIMARY KEY,
             full_name TEXT,
             username TEXT,
-            is_premium INTEGER DEFAULT 0
+            is_premium INTEGER DEFAULT 0,
+            referred_by INTEGER,
+            referral_count INTEGER DEFAULT 0
         )
     ''')
     cursor.execute('''
@@ -48,12 +50,25 @@ def init_db():
 
 init_db()
 
-def db_add_user(user_id, full_name, username):
+def db_add_user(user_id, full_name, username, referred_by=None):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute("INSERT OR IGNORE INTO users (user_id, full_name, username, is_premium) VALUES (?, ?, ?, 0)", 
-                   (user_id, full_name, username))
-    conn.commit()
+    cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
+    exists = cursor.fetchone()
+    
+    if not exists:
+        cursor.execute("INSERT INTO users (user_id, full_name, username, is_premium, referred_by, referral_count) VALUES (?, ?, ?, 0, ?, 0)", 
+                       (user_id, full_name, username, referred_by))
+        
+        # ሪፈራል ካለ ለጋባዡ ቁጥር መጨመር
+        if referred_by and referred_by != user_id:
+            cursor.execute("UPDATE users SET referral_count = referral_count + 1 WHERE user_id = ?", (referred_by,))
+            # 30 ከሞላ በራስ-ሰር VIP ማድረግ
+            cursor.execute("SELECT referral_count FROM users WHERE user_id = ?", (referred_by,))
+            ref_row = cursor.fetchone()
+            if ref_row and ref_row[0] >= 30:
+                cursor.execute("UPDATE users SET is_premium = 1 WHERE user_id = ?", (referred_by,))
+        conn.commit()
     conn.close()
 
 def db_set_premium(user_id, status=1):
@@ -71,6 +86,14 @@ def db_is_premium(user_id):
     conn.close()
     return row and row[0] == 1
 
+def db_get_referral_count(user_id):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT referral_count FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else 0
+
 def db_get_stats():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -83,11 +106,11 @@ def db_get_stats():
     cursor.execute("SELECT COUNT(*) FROM users WHERE is_premium = 0")
     free_count = cursor.fetchone()[0]
     
-    cursor.execute("SELECT user_id, full_name, username, is_premium FROM users")
+    cursor.execute("SELECT user_id, full_name, username, is_premium, referral_count FROM users")
     rows = cursor.fetchall()
     conn.close()
     
-    users_list = [f"ID: {row[0]} | Name: {row[1]} | Username: @{row[2] or 'None'} | Status: {'[VIP/Premium]' if row[3]==1 else '[Free]'}" for row in rows]
+    users_list = [f"ID: {row[0]} | Name: {row[1]} | Username: @{row[2] or 'None'} | Status: {'[VIP/Premium]' if row[3]==1 else '[Free]'} | Refs: {row[4]}" for row in rows]
     return total_users, premium_count, free_count, users_list
 
 def db_get_users_by_type(is_prem):
@@ -188,7 +211,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
     
-    db_add_user(user.id, user.full_name, user.username)
+    # ሪፈራል ኮድ መኖሩን ማረጋገጥ (ለምሳሌ /start 123456789)
+    referred_by = None
+    if context.args:
+        try:
+            potential_ref = int(context.args[0])
+            if potential_ref != user.id:
+                referred_by = potential_ref
+        except ValueError:
+            pass
+
+    db_add_user(user.id, user.full_name, user.username, referred_by)
     await check_and_update_membership(user.id, context)
 
     if chat.type in ["group", "supergroup"]:
@@ -202,6 +235,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [KeyboardButton("📝 Model Exam"), KeyboardButton("🏛 Remedial National Exam 🔒")],
         [KeyboardButton("🎯 Exam Trainer Quiz"), KeyboardButton("📚 Tutorial PDF+Video 🔒")],
+        [KeyboardButton("🔥 የዕለቱ ጥያቄ (Daily Quiz)"), KeyboardButton("👥 ሪፈራል (Invite & VIP)")],
         [KeyboardButton("💎 VIP / ፕሪሚየም ለመሆን"), KeyboardButton("🏆 Leaderboard")],
         [KeyboardButton("🎓 Go to Tutorial Class 🔒"), KeyboardButton("👨‍💻 Contact Admin")]
     ]
@@ -297,7 +331,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🔓 **ፕሪሚየም ነዎት!** እባክዎ የሚፈልጉትን ዓመት ይምረጡ:", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown", protect_content=True)
         else:
             keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ግሩፓችን አባል በመሆን ወይም 300 ብር በመክፈል ፕሪሚየም መሆን ይችላሉ።"
+            msg = f"ሰላም {user.full_name}\nእስካሁን ፕሪሚየም ተጠቃሚ አይደሉም። ግሩፓችን አባል በመሆን፣ 30 ጓደኞችን በመጋበዝ ወይም 300 ብር በመክፈል ፕሪሚየም መሆን ይችላሉ።"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text in ["📚 Tutorial PDF+Video 🔒", "🎓 Go to Tutorial Class 🔒"]:
@@ -306,19 +340,61 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🎓📚 **የፕሪሚየም ትምህርት ማዕከል ሊንክዎ፦**\nhttps://t.me/+yQdJM7LxN8VmNWY0", parse_mode="Markdown", protect_content=True)
         else:
             keyboard = [[InlineKeyboardButton("💎 VIP / ፕሪሚየም ለመሆን ይጫኑ", callback_data="vip_info")]]
-            msg = f"ሰላም {user.full_name}\nእስካሁን የፕሪሚየም ግሩፓችን አባል አይደሉም። እባክዎ በመጀመሪያ ግሩፓችንን ይቀላቀሉ!"
+            msg = f"ሰላም {user.full_name}\nእስካሁን የፕሪሚየም ግሩፓችን አባል አይደሉም። እባክዎ በመጀመሪያ ግሩፓችንን ይቀላቀሉ ወይም ጓደኞችዎን ይጋብዙ!"
             await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), protect_content=True)
 
     elif text == "💎 VIP / ፕሪሚየም ለመሆን":
         vip_text = (
             "💎 **የ VIP / ፕሪሚየም አባልነት መረጃ** 💎\n\n"
-            "ሙሉ ዓመቱን ከኛ ጋር ሆኖ ለመማር እና ሁሉንም ጥያቄዎች/ቪዲዮዎች ለመክፈት **300 ብር** ብቻ በመክፈል ወይም የኛን Private Tutorial Group በመቀላቀል ፕሪሚየም ይሁኑ!\n\n"
+            "ሙሉ ዓመቱን ከኛ ጋር ሆኖ ለመማር እና ሁሉንም ጥያቄዎች/ቪዲዮዎች ለመክፈት ከሚከተሉት መንገዶች አንዱን ይምረጡ፦\n"
+            "1️⃣ 30 ጓደኞችዎን ወደ ቦቱ ይጋብዙ (በራስ-ሰር ቪአይፒ ይሆናሉ!)\n"
+            "2️⃣ የኛን Private Tutorial Group ይቀላቀሉ\n"
+            "3️⃣ **300 ብር** ብቻ በባንክ ይክፈሉ:\n\n"
             "🏦 **CBE:** `1000667301673`\n"
             "📱 **TELEBIRR:** `0929698365`\n"
             "📱 **CBE BIRR:** `0929698365`\n\n"
-            "💵 ከላይ ባሉት አማራጮች 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ!"
+            "💵 ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ!"
         )
         await update.message.reply_text(vip_text, parse_mode="Markdown", protect_content=True)
+
+    elif text == "🔥 የዕለቱ ጥያቄ (Daily Quiz)":
+        q_data = load_questions()
+        all_qs = []
+        for s in ["Biology", "Chemistry", "Physics", "Maths", "English", "Geography", "History"]:
+            all_qs.extend(get_all_questions_for_subject(q_data, s))
+        
+        if not all_qs:
+            await update.message.reply_text("⚠️ የዕለቱ ጥያቄዎች በፋይሉ ውስጥ ገና አልተሞሉም!", protect_content=True)
+            return
+        
+        q = random.choice(all_qs)
+        q_text_raw, options_list, correct_id, explanation_raw = parse_question_data(q)
+        
+        await context.bot.send_poll(
+            chat_id=update.effective_chat.id,
+            question=f"🔥 [የዕለቱ ፈተና] {q_text_raw}",
+            options=[str(opt)[:100] for opt in options_list],
+            is_anonymous=False,
+            type="quiz",
+            correct_option_id=correct_id,
+            explanation=explanation_raw if explanation_raw else None,
+            protect_content=True
+        )
+        return
+
+    elif text == "👥 ሪፈራል (Invite & VIP)":
+        ref_count = db_get_referral_count(user.id)
+        ref_link = f"https://t.me/{context.bot.username}?start={user.id}"
+        ref_text = (
+            f"👥 **የሪፈራል (Referral) ፕሮግራም** 👥\n\n"
+            f"ጓደኞችዎን ወደ ቦቱ በመጋበዝ ያለ ክፍያ **VIP / Premium** መሆን ይችላሉ!\n"
+            f"📌 **መስፈርት:** 30 ትክክለኛ Remedial ተማሪዎችን መጋበዝ አለብዎት።\n\n"
+            f"📊 **እስካሁን የጋበዟቸው ተማሪዎች ብዛት:** `{ref_count} / 30`\n\n"
+            f"🔗 **የእርስዎ ልዩ መጋበዣ ሊንክ (Referral Link):**\n`{ref_link}`\n\n"
+            f"ይህንን ሊንክ ለጓደኞችዎ በማጋራት 30 ተማሪዎችን ሲያመጡ ቦቱ በራስ-ሰር ቪአይፒ ያደርግዎታል!"
+        )
+        await update.message.reply_text(ref_text, parse_mode="Markdown", protect_content=True)
+        return
 
     elif text == "🎯 Exam Trainer Quiz":
         keyboard = [
@@ -403,11 +479,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "vip_info":
         vip_text = (
             "💎 **የ VIP / ፕሪሚየም አባልነት መረጃ** 💎\n\n"
-            "ሙሉ ዓመቱን ከኛ ጋር ሆኖ ለመማር እና ሁሉንም ጥያቄዎች/ቪዲዮዎች ለመክፈት **300 ብር** ብቻ በመክፈል ፕሪሚየም ይሁኑ!\n\n"
+            "ሙሉ ዓመቱን ከኛ ጋር ሆኖ ለመማር እና ሁሉንም ጥያቄዎች/ቪዲዮዎች ለመክፈት ከሚከተሉት መንገዶች አንዱን ይምረጡ፦\n"
+            "1️⃣ 30 ጓደኞችዎን ወደ ቦቱ ይጋብዙ (በራስ-ሰር ቪአይፒ ይሆናሉ!)\n"
+            "2️⃣ የኛን Private Tutorial Group ይቀላቀሉ\n"
+            "3️⃣ **300 ብር** ብቻ በባንክ ይክፈሉ:\n\n"
             "🏦 **CBE:** `1000667301673`\n"
             "📱 **TELEBIRR:** `0929698365`\n"
             "📱 **CBE BIRR:** `0929698365`\n\n"
-            "💵 ከላይ ባሉት አማራጮች 300 ብር ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ!"
+            "💵 ከፍለው **የክፍያ ስክሪንሾት (Screenshot)** ፎቶውን በቀጥታ በዚህ ቻት ውስጥ ይላኩሉኝ!"
         )
         await query.message.reply_text(vip_text, parse_mode="Markdown")
         return
