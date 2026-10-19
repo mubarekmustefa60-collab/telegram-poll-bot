@@ -4,8 +4,9 @@ import os
 import random
 import sqlite3
 import threading
+from io import BytesIO
 from flask import Flask
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 logging.basicConfig(
@@ -86,7 +87,7 @@ def db_get_stats():
     rows = cursor.fetchall()
     conn.close()
     
-    users_list = [f"• {row[1]} (@{row[2] or 'No Username'}) - {'[Premium]' if row[3]==1 else '[Free]'}" for row in rows]
+    users_list = [f"ID: {row[0]} | Name: {row[1]} | Username: @{row[2] or 'None'} | Status: {'[VIP/Premium]' if row[3]==1 else '[Free]'}" for row in rows]
     return total_users, premium_count, free_count, users_list
 
 def db_get_users_by_type(is_prem):
@@ -172,7 +173,7 @@ def parse_question_data(q):
     explanation = q.get("explanation", "")
     return q_text, options_list, correct_id, explanation
 
-# ግሩፕ ውስጥ አባል መሆኑን አውቆ ፕሪሚየም የሚያደርግ ተግባር
+# ግሩፕ አባልነት ቼክ
 async def check_and_update_membership(user_id, context):
     try:
         member = await context.bot.get_chat_member(chat_id=TUTORIAL_GROUP_ID, user_id=user_id)
@@ -206,7 +207,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     
     if user.id == ADMIN_ID:
-        keyboard.append([KeyboardButton("Admin Control")])
+        keyboard.append([KeyboardButton("⚙️ Admin Control")])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -216,7 +217,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "      *የስኬትዎ መንገድ!* 🚀\n"
         "🌟━━━━━━━━━━━━━━━━━━🌟\n\n"
         f"👋 እንኳን ደህና መጡ, **{user.first_name}**!\n\n"
-        "📌 *ማስታወሻ:* በ 🔒 ምልክት የተደረገባቸው አገልግሎቶች ለ **Premium** ተጠቃሚዎች ብቻ ክፍት ናቸው።"
+        "📌 *ማስታወሻ:* በ 🔒 ምልክት የተደረገባቸው አገልግሎቶች ለ **VIP / Premium** ተጠቃሚዎች ብቻ ክፍት ናቸው።"
     )
     
     await update.message.reply_text(
@@ -263,7 +264,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         target_group = user_quiz_sessions.pop("broadcasting_target", "all")
         user_quiz_sessions["broadcasting_mode"].remove(user.id)
         
-        recipients = db_get_users_by_type(is_prem=True) if target_group == "premium" else db_get_users_by_type(is_prem=False)
+        recipients = db_get_users_by_type(is_prem=True) if target_group == "vip" else db_get_users_by_type(is_prem=False)
         success_count = 0
         
         for uid in recipients:
@@ -345,20 +346,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "👨‍💻 Contact Admin":
         await update.message.reply_text("👨‍💻 **የአድሚን ማነጋገሪያ አድራሻ፡**\n@rmedial_matrix_support", parse_mode="Markdown", protect_content=True)
 
-    elif text == "Admin Control" and user.id == ADMIN_ID:
-        total_count, prem_count, free_count, active_list_rows = db_get_stats()
-        active_list = "\n".join(active_list_rows) if active_list_rows else "ምንም ተጠቃሚ የለም"
+    elif text == "⚙️ Admin Control" and user.id == ADMIN_ID:
+        total_count, prem_count, free_count, _ = db_get_stats()
         
         admin_kb = [
-            [InlineKeyboardButton("📢 Broadcast to Premium", callback_data="bc_premium"),
-             InlineKeyboardButton("📢 Broadcast to Free", callback_data="bc_free")]
+            [InlineKeyboardButton("📄 ተጠቃሚዎችን በ TXT ፋይል አውርድ", callback_data="download_users_txt")],
+            [InlineKeyboardButton("📢 Broadcast to VIP Members", callback_data="bc_vip"),
+             InlineKeyboardButton("📢 Broadcast to Free Members", callback_data="bc_free")]
         ]
         admin_text = (
             f"⚙️ **Admin Control Panel**\n\n"
             f"👥 ጠቅላላ ተጠቃሚዎች: **{total_count}**\n"
-            f"💎 ፕሪሚየም ተጠቃሚዎች: **{prem_count}**\n"
-            f"🆓 ነፃ ተጠቃሚዎች: **{free_count}**\n\n"
-            f"📋 **የተማሪዎች ዝርዝር:**\n{active_list}"
+            f"💎 VIP ፕሪሚየም አባላት: **{prem_count}**\n"
+            f"🆓 ነፃ አባላት: **{free_count}**\n\n"
+            f"👇 ተጠቃሚዎችን በፋይል ለማውረድ ወይም ብሮድካስት ለማድረግ ከታች ያሉትን ይጠቀሙ:"
         )
         await update.message.reply_text(admin_text, reply_markup=InlineKeyboardMarkup(admin_kb), parse_mode="Markdown", protect_content=True)
 
@@ -373,16 +374,30 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.delete()
         return
 
-    elif data == "bc_premium" and user.id == ADMIN_ID:
+    elif data == "download_users_txt" and user.id == ADMIN_ID:
+        _, _, _, users_list_rows = db_get_stats()
+        file_content = "\n".join(users_list_rows)
+        bio = BytesIO(file_content.encode("utf-8"))
+        bio.name = "remedial_matrix_users.txt"
+        
+        await context.bot.send_document(
+            chat_id=user.id,
+            document=InputFile(bio),
+            caption="📋 **የሁሉም ተጠቃሚዎች ዝርዝር ፋይል (TXT)**",
+            parse_mode="Markdown"
+        )
+        return
+
+    elif data == "bc_vip" and user.id == ADMIN_ID:
         user_quiz_sessions.setdefault("broadcasting_mode", set()).add(user.id)
-        user_quiz_sessions["broadcasting_target"] = "premium"
-        await query.message.reply_text("📢 ለ **Premium** ተጠቃሚዎች መላክ የሚፈልጉትን መልዕክት (ወይም ፎቶ) አሁን ይላኩሱልኝ:")
+        user_quiz_sessions["broadcasting_target"] = "vip"
+        await query.message.reply_text("📢 ለ **VIP / Premium** አባላት መላክ የሚፈልጉትን መልዕክት (ወይም ፎቶ) አሁን ይላኩሱልኝ:")
         return
 
     elif data == "bc_free" and user.id == ADMIN_ID:
         user_quiz_sessions.setdefault("broadcasting_mode", set()).add(user.id)
         user_quiz_sessions["broadcasting_target"] = "free"
-        await query.message.reply_text("📢 ለ **Free** ተጠቃሚዎች መላክ የሚፈልጉትን መልዕክት (ወይም ፎቶ) አሁን ይላኩሱልኝ:")
+        await query.message.reply_text("📢 ለ **Free** አባላት መላክ የሚፈልጉትን መልዕክት (ወይም ፎቶ) አሁን ይላኩሱልኝ:")
         return
 
     elif data == "vip_info":
@@ -640,5 +655,5 @@ def main():
     print("Telegram Bot በመጀመር ላይ ነው...")
     application.run_polling()
 
-if __name__ == main():
+if __name__ == '__main__':
     main()
